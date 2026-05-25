@@ -1,0 +1,44 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="16.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <CustomBuild Include="C:\Users\Prateek\Desktop\Passion\yourVeryOwnDAW\build\_deps\sdl2-subbuild\CMakeFiles\5d50d6852da15dc8baf30e518b1d9e24\sdl2-populate-mkdir.rule">
+      <Filter>CMake Rules</Filter>
+    </CustomBuild>
+    <CustomBuild Include="C:\Users\Prateek\Desktop\Passion\yourVeryOwnDAW\build\_deps\sdl2-subbuild\CMakeFiles\5d50d6852da15dc8baf30e518b1d9e24\sdl2-populate-download.rule">
+      <Filter>CMake Rules</Filter>
+    </CustomBuild>
+    <CustomBuild Include="C:\Users\Prateek\Desktop\Passion\yourVeryOwnDAW\build\_deps\sdl2-subbuild\CMakeFiles\5d50d6852da15dc8baf30e518b1d9e24\sdl2-populate-update.rule">
+      <Filter>CMake Rules</Filter>
+    </CustomBuild>
+    <CustomBuild Include="C:\Users\Prateek\Desktop\Passion\yourVeryOwnDAW\build\_deps\sdl2-subbuild\CMakeFiles\5d50d6852da15dc8baf30e518b1d9e24\sdl2-populate-patch.rule">
+      <Filter>CMake Rules</Filter>
+    </CustomBuild>
+    <CustomBuild Include="C:\Users\Prateek\Desktop\Passion\yourVeryOwnDAW\build\_deps\sdl2-subbuild\CMakeFiles\5d50d6852da15dc8baf30e518b1d9e24\sdl2-populate-configure.rule">
+      <Filter>CMake Rules</Filter>
+    </CustomBuild>
+    <CustomBuild Include="C:\Users\Prateek\Desktop\Passion\yourVeryOwnDAW\build\_deps\sdl2-subbuild\CMakeFiles\5d50d6852da15dc8baf30e518b1d9e24\sdl2-populate-build.rule">
+      <Filter>CMake Rules</Filter>
+    </CustomBuild>
+    <CustomBuild Include="C:\Users\Prateek\Desktop\Passion\yourVeryOwnDAW\build\_deps\sdl2-subbuild\CMakeFiles\5d50d6852da15dc8baf30e518b1d9e24\sdl2-populate-install.rule">
+      <Filter>CMake Rules</Filter>
+    </CustomBuild>
+    <CustomBuild Include="C:\Users\Prateek\Desktop\Passion\yourVeryOwnDAW\build\_deps\sdl2-subbuild\CMakeFiles\5d50d6852da15dc8baf30e518b1d9e24\sdl2-populate-test.rule">
+      <Filter>CMake Rules</Filter>
+    </CustomBuild>
+    <CustomBuild Include="C:\Users\Prateek\Desktop\Passion\yourVeryOwnDAW\build\_deps\sdl2-subbuild\CMakeFiles\15c3c07e138f2abf5302b3ae35ba07a8\sdl2-populate-complete.rule">
+      <Filter>CMake Rules</Filter>
+    </CustomBuild>
+    <CustomBuild Include="C:\Users\Prateek\Desktop\Passion\yourVeryOwnDAW\build\_deps\sdl2-subbuild\CMakeFiles\1bb095c341db0230f9b308bb51ad3e8b\sdl2-populate.rule">
+      <Filter>CMake Rules</Filter>
+    </CustomBuild>
+    <CustomBuild Include="C:\Users\Prateek\Desktop\Passion\yourVeryOwnDAW\build\_deps\sdl2-subbuild\CMakeLists.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="C:\Users\Prateek\Desktop\Passion\yourVeryOwnDAW\build\_deps\sdl2-subbuild\CMakeFiles\sdl2-populate" />
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="CMake Rules">
+      <UniqueIdentifier>{47800BA4-559B-3896-9E8E-F0E45786F4E0}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+</Project>

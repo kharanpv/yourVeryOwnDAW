@@ -1,0 +1,17 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="16.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <CustomBuild Include="C:\Users\Prateek\Desktop\Passion\yourVeryOwnDAW\build\CMakeFiles\5454ab27d115ce11096be9ac786661a8\uninstall.rule">
+      <Filter>CMake Rules</Filter>
+    </CustomBuild>
+    <CustomBuild Include="C:\Users\Prateek\Desktop\Passion\yourVeryOwnDAW\build\_deps\sdl2-src\CMakeLists.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="C:\Users\Prateek\Desktop\Passion\yourVeryOwnDAW\build\_deps\sdl2-build\CMakeFiles\uninstall" />
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="CMake Rules">
+      <UniqueIdentifier>{FBAE7748-14D9-3D29-B048-3FBEC77CE813}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+</Project>
