@@ -34,11 +34,10 @@ Open your terminal in the root directory of the repository and run the following
    ```bash
    cmake -S . -B build
 
-## 2. Compile the Executable
-
-```bash
-cmake --build build
-```
+2. **Compile the Executable**
+   ```bash
+   cmake --build build
+   ```
 
 ---
 

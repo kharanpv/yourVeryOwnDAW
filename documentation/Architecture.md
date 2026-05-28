@@ -11,17 +11,19 @@ This is the lowest-level layer. It talks directly to the OS and the soundcard. I
 - [x] **The Audio Callback Function:** The high-priority loop that constantly fills the soundcard's buffers with audio data exactly when requested.
 - [x] **Buffer Management:** Ensuring the flow of audio data never starves or overflows.
 
-## 🔊 2. The DSP Engine (Digital Signal Processing)
-This lives inside the Audio Engine. It is the code that actually mathematically generates or alters the sound.
-- [x] **Sine Wave Generator (MVP):** A basic math function outputting a simple waveform to prove the engine works.
-- [ ] **Basic Envelope (ADSR):** A volume curve (Attack, Decay, Sustain, Release) so notes have a distinct start and end.
+## 🔊 2. The Sound Engine (DSP & Synthesis)
+This lives inside the Audio Engine. It is the code that mathematically generates, shapes, and alters the audio signal.
+- [x] **Fundamental Oscillator Library:** Base `Oscillator` class and standard basic waveforms (Sine, Sawtooth, Square, Triangle, and White Noise).
+- [ ] **Subtractive Synthesis - Volume Envelope (ADSR):** A volume curve (Attack, Decay, Sustain, Release) so continuous tones have a distinct start and end.
+- [ ] **Subtractive Synthesis - Further Shaping:** Filters and additional modulation sources (to be defined as development progresses).
+- [ ] **Sampling:** Code to read `.wav` files into memory for drum playback and manipulation.
 - [ ] **Voice Allocation / Object Pooling:** Pre-allocating a fixed massive amount of tracks/voices at startup to simulate "infinite" tracks without causing memory spikes during playback.
-- [ ] **Sample Loader (Future):** Code to read `.wav` files into memory for drum playback.
+- [ ] **Backburner / Future Releases:** Frequency Modulation (FM) synthesis and Physical Modeling.
 
 ## 🕹️ 3. The Input / Routing Layer (The Nervous System)
-This handles the "dawless" controller data and bridges the human to the machine.
-- [ ] **Hardware Polling:** An SDL2 loop that continuously reads the state of video game controllers (D-pad, face buttons) and the typing keyboard.
-- [ ] **State Translation:** Converting a raw button press into an actionable event (e.g., "Button A Pressed" = "Toggle Step On").
+This handles the controller data and bridges the human to the machine.
+- [ ] **Hardware Polling:** An SDL2 loop that continuously reads the state of inputs (mouse, keyboard, gamepads).
+- [ ] **State Translation:** Converting a raw input action into an actionable event (e.g., "Spacebar Pressed" = "Toggle Playback").
 - [ ] **Routing Matrix:** Sending those events to either the UI (for navigation) or the Sequencer (for playback).
 
 ## ⏱️ 4. The Sequencer / Clock (The Heartbeat)
@@ -40,7 +42,7 @@ The graphical overlay drawn using Dear ImGui. It runs on the main thread and sim
 
 ## 🔄 How the Components Interact (Data Flow)
 
-1. **Input:** The user presses the "A" button on an Xbox controller. The **Input Layer** detects this.
+1. **Input:** The user presses an input control. The **Input Layer** detects this.
 2. **Logic Update:** The Input Layer tells the **Sequencer** to activate Step 5 in the array.
 3. **Audio Generation:** The **Audio Engine**'s callback fires. It checks the Sequencer, sees Step 5 is active, and tells the **DSP Engine** to generate a note.
 4. **Output:** The Audio Engine sends that generated sound directly to the soundcard.

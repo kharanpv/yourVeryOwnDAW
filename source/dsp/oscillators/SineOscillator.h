@@ -1,23 +1,14 @@
 #pragma once
-#include "../../core/IAudioSource.h"
+#include "Oscillator.h"
 
 // SineOscillator
-// Generates a continuous mathematical sine wave. 
-// Inherits from IAudioSource to interface with the AudioDevice.
-class SineOscillator : public IAudioSource {
+// Generates a pure mathematical sine wave.
+class SineOscillator : public Oscillator {
 public:
-    SineOscillator(float sampleRate, float frequency, float amplitude = 0.1f);
-    
-    void processAudio(float* buffer, int numSamples) override;
-    
-    void setFrequency(float frequency);
+    // Inherit the base constructor directly
+    using Oscillator::Oscillator; 
 
-    void setAmplitude(float newAmplitude);
-
-private:
-    float sampleRate;
-    float frequency;
-    float amplitude;
-    float phase;
-    float phaseIncrement;
+protected:
+    // Implement the specific math for a sine wave
+    float calculateSample(float currentPhase) override;
 };

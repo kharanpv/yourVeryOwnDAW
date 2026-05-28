@@ -26,12 +26,14 @@ FetchContent_MakeAvailable(SDL2)
 # ---------------------------------------------------------
 # Target Configuration
 # ---------------------------------------------------------
-# Define all source files to compile
-add_executable(${PROJECT_NAME}
-    source/main.cpp
-    source/core/AudioDevice.cpp
-    source/dsp/oscillators/SineOscillator.cpp
+# 1. Dynamically scan the 'source' folder and subfolders for .cpp files
+# 2. Re-trigger configuration automatically if files are added or deleted
+file(GLOB_RECURSE SRC_FILES CONFIGURE_DEPENDS
+    "source/*.cpp"
 )
+
+# Define the executable using the dynamically generated list
+add_executable(${PROJECT_NAME} ${SRC_FILES})
 
 # Link the static SDL2 library to the YVO-DAW executable
 target_link_libraries(${PROJECT_NAME} PRIVATE SDL2-static)
