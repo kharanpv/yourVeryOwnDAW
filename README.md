@@ -51,7 +51,7 @@ Once the build reaches 100%, run the executable using the command for your opera
 If you are using the standard Microsoft Visual C++ (MSVC) compiler, CMake places the executable inside a configuration folder:
 
 ```powershell
-.\build\Debug\YVO-DAW.exe
+.\build\Debug\Your_Very_Own_DAW.exe
 ```
 
 If you generated the build using Ninja or MinGW instead, it may be located directly at:

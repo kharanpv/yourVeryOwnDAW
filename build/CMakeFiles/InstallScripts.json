@@ -1,8 +1,0 @@
-{
-	"InstallScripts" : 
-	[
-		"C:/Users/Prateek/Desktop/Passion/yourVeryOwnDAW/build/cmake_install.cmake",
-		"C:/Users/Prateek/Desktop/Passion/yourVeryOwnDAW/build/_deps/sdl2-build/cmake_install.cmake"
-	],
-	"Parallel" : false
-}

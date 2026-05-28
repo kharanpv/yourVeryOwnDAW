@@ -1,0 +1,47 @@
+# ==========================================
+# 🎛️ Open Source Groovebox .gitignore
+# ==========================================
+
+# --- VS Code & IDE Specifcs ---
+.history/
+.vscode/ipch/
+.vscode/.cmaketools/
+.vscode/browse.vc.db
+.vscode/browse.vc.db-journal
+# Un-comment the line below if you don't want to track tasks.json/launch.json
+# .vscode/
+
+# --- CMake Build Artifacts ---
+build/
+out/
+CMakeCache.txt
+CMakeFiles/
+CMakeTargetDirectories.txt
+cmake_install.cmake
+Makefile
+*.cmake
+
+# --- User-Specific CMake Presets ---
+CMakeUserPresets.json
+
+# --- Compiled Binaries & Libraries ---
+*.exe
+*.dll
+*.so
+*.dylib
+*.out
+*.app
+*.a
+*.lib
+
+# --- OS Generated Files ---
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# --- Log Files ---
+*.log
