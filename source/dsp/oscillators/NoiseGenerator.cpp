@@ -1,24 +1,16 @@
 #include "NoiseGenerator.h"
-#include <cstdlib>
+#include <cstdlib> // Required for rand() and RAND_MAX
 
-NoiseGenerator::NoiseGenerator(float amplitude) : amplitude(amplitude) {}
+// Constructor passes dummy values (44100.0f sample rate, 0.0f frequency) 
+// up to the base Oscillator class since white noise does not use them.
+NoiseGenerator::NoiseGenerator(float amplitude) 
+    : Oscillator(44100.0f, 0.0f, amplitude) {}
 
-void NoiseGenerator::setAmplitude(float newAmplitude) {
-    amplitude = newAmplitude;
-}
-
-void NoiseGenerator::processAudio(float* buffer, int numSamples) {
-    // Step by 2 to handle Left/Right interleaved stereo channels
-    for (int i = 0; i < numSamples; i += 2) {
-        
-        // Generate a random float between -1.0 and 1.0
-        float randomValue = (static_cast<float>(std::rand()) / static_cast<float>(RAND_MAX)) * 2.0f - 1.0f;
-        
-        // Scale by amplitude
-        float sample = randomValue * amplitude;
-        
-        // Write the same random sample to both Left and Right channels
-        buffer[i]     = sample; 
-        buffer[i + 1] = sample; 
-    }
+float NoiseGenerator::calculateSample(float currentPhase) {
+    // White noise does not follow a repeating wave cycle.
+    // We completely ignore the 'currentPhase' argument and simply 
+    // return a random float between -1.0f and 1.0f.
+    
+    float randomValue = static_cast<float>(rand()) / static_cast<float>(RAND_MAX);
+    return (randomValue * 2.0f) - 1.0f;
 }
