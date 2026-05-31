@@ -2,10 +2,8 @@
 #include "../core/IAudioSource.h"
 #include "oscillators/Oscillator.h"
 #include "envelopes/AhdsrEnvelope.h"
+#include "filters/LowPassFilter.h"
 
-// SynthVoice
-// A self-contained instrument engine that pairs a raw waveform generator (Oscillator)
-// with a dynamic volume shaper (AhdsrEnvelope), including an initial start delay.
 class SynthVoice : public IAudioSource {
 public:
     SynthVoice(Oscillator* osc);
@@ -14,21 +12,28 @@ public:
 
     void triggerNote();
     void releaseNote();
-
-    // Required to calculate accurate delays
     void setSampleRate(float newSampleRate);
-
-    // Set the amount of time (in seconds) before the attack phase begins
     void setDelay(float delaySec);
 
-    AhdsrEnvelope& getEnvelope();
+    // Getters for external configuration
+    AhdsrEnvelope& getAmpEnvelope();
+    AhdsrEnvelope& getFilterEnvelope();
+    
+    // Set the base frequency of the filter, and how far the envelope pushes it up
+    void setFilterParameters(float baseCutoffHz, float envDepthHz);
+
     void setOscillator(Oscillator* newOsc);
 
 private:
     Oscillator* currentOscillator;
-    AhdsrEnvelope envelope;
+    LowPassFilter filter;         // The actual math block
+
+    AhdsrEnvelope ampEnvelope;    // Controls Volume
+    AhdsrEnvelope filterEnvelope; // Controls Filter Brightness
     
-    // Pre-Delay Timer Variables
+    float filterBaseCutoff;
+    float filterEnvDepth;
+
     float sampleRate;
     float delaySampleCount;
     float currentDelaySample;

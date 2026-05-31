@@ -15,7 +15,9 @@ This is the lowest-level layer. It talks directly to the OS and the soundcard. I
 This lives inside the Audio Engine. It is the code that mathematically generates, shapes, and alters the audio signal.
 - [x] **Fundamental Oscillator Library:** Base `Oscillator` class and standard basic waveforms (Sine, Sawtooth, Square, Triangle, and White Noise).
 - [x] **Amplitude & Delay Shaping (AHDSR):** A volume curve (Attack, Hold, Decay, Sustain, Release) plus a Pre-Delay timer so continuous tones have a precise, dynamic start and end.
-- [ ] **Subtractive Synthesis - Filter & VCF Envelope:** A digital resonant low-pass filter, modulated by its own independent AHDSR envelope to shape the frequency spectrum over time.
+- [x] **Subtractive Synthesis - Pure 4-Pole Filter & Envelope:** A digital 4-pole low-pass filter cascade, modulated by its own independent AHDSR envelope to smoothly curve the wave's sharp digital jumps over time.
+- [ ] **Filter Resonance (Feedback Loop):** Implementing a mathematical feedback path from the 4th filter stage back to the input to amplify the cutoff frequency and add analog "squelch/whistle."
+- [ ] **Synth Parameter UX & Real-Time Manipulation:** Establishing a robust interactive control layout (mapped to keyboards/gamepads) to actively dial in envelope times, depths, and cutoffs in a live testground environment before moving to full tracking.
 - [ ] **Sampling:** Code to read `.wav` files into memory for drum playback and manipulation.
 - [ ] **Voice Allocation / Object Pooling:** Pre-allocating a fixed massive amount of tracks/voices at startup to simulate "infinite" tracks without causing memory spikes during playback.
 - [ ] **Backburner / Future Releases:** Frequency Modulation (FM) synthesis and Physical Modeling.

@@ -28,7 +28,7 @@ void runAhdsrLoop(AudioDevice& engine, SynthVoice& voice, const std::string& wav
     });
 
     std::cout << "\n=== Playing " << waveName << " ===" << std::endl;
-    std::cout << "Auto-looping AHDSR. Press Enter ONCE to switch to the next wave..." << std::endl;
+    std::cout << "Auto-looping AHDSR Filter Sweep. Press Enter ONCE to switch to the next wave..." << std::endl;
 
     engine.start();
 
@@ -78,60 +78,92 @@ int main(int argc, char* argv[]) {
     TriangleOscillator triWave(sampleRate, frequency);
     NoiseGenerator noiseWave(0.1f);
 
-    // Our new 5-stage AHDSR + Pre-Delay configuration
+    // -------------------------------------------------------------
+    // SYNTHESIZER PATCH CONFIGURATION
+    // -------------------------------------------------------------
     float delay = 0.5f;
-    float att = 1.0f;
-    float hold = 0.5f;
-    float dec = 1.0f;
-    float sus = 0.2f;
-    float rel = 2.0f;
 
-    // 1. Sine Test
+    // 1. Amp Envelope (Volume Level)
+    float aAtt = 1.0f;
+    float aHold = 0.5f;
+    float aDec = 1.0f;
+    float aSus = 0.2f;
+    float aRel = 2.0f;
+
+    // 2. Filter Envelope (Brightness / Cutoff Movement)
+    float fAtt = 1.0f;
+    float fHold = 0.0f;
+    float fDec = 1.5f;
+    float fSus = 0.1f;
+    float fRel = 2.0f;
+
+    // 3. Filter Parameters (Frequency bounds)
+    float baseCutoff = 100.0f; // Starts extremely dark/muffled
+    float envDepth = 6000.0f;  // Sweeps all the way up to 6100Hz at peak attack
+    // -------------------------------------------------------------
+
+
+    // 1. Sine Test (Will sound mostly like volume changes, no high harmonics to filter)
     {
         SynthVoice voice(&sineWave);
         voice.setSampleRate(sampleRate);
         voice.setDelay(delay);
-        voice.getEnvelope().setParameters(att, hold, dec, sus, rel);
+        voice.getAmpEnvelope().setParameters(aAtt, aHold, aDec, aSus, aRel);
+        voice.setFilterParameters(baseCutoff, envDepth);
+        voice.getFilterEnvelope().setParameters(fAtt, fHold, fDec, fSus, fRel);
+        
         AudioDevice audioEngine;
         if (audioEngine.initialize(&voice)) runAhdsrLoop(audioEngine, voice, "SINE WAVE");
     }
 
-    // 2. Square Test
+    // 2. Square Test (The filter sweep will be incredibly obvious here)
     {
         SynthVoice voice(&squareWave);
         voice.setSampleRate(sampleRate);
         voice.setDelay(delay);
-        voice.getEnvelope().setParameters(att, hold, dec, sus, rel);
+        voice.getAmpEnvelope().setParameters(aAtt, aHold, aDec, aSus, aRel);
+        voice.setFilterParameters(baseCutoff, envDepth);
+        voice.getFilterEnvelope().setParameters(fAtt, fHold, fDec, fSus, fRel);
+        
         AudioDevice audioEngine;
         if (audioEngine.initialize(&voice)) runAhdsrLoop(audioEngine, voice, "SQUARE WAVE");
     }
 
-    // 3. Sawtooth Test
+    // 3. Sawtooth Test (Classic analog brass/string sweep)
     {
         SynthVoice voice(&sawWave);
         voice.setSampleRate(sampleRate);
         voice.setDelay(delay);
-        voice.getEnvelope().setParameters(att, hold, dec, sus, rel);
+        voice.getAmpEnvelope().setParameters(aAtt, aHold, aDec, aSus, aRel);
+        voice.setFilterParameters(baseCutoff, envDepth);
+        voice.getFilterEnvelope().setParameters(fAtt, fHold, fDec, fSus, fRel);
+        
         AudioDevice audioEngine;
         if (audioEngine.initialize(&voice)) runAhdsrLoop(audioEngine, voice, "SAWTOOTH WAVE");
     }
 
-    // 4. Triangle Test
+    // 4. Triangle Test (Gentler sweep)
     {
         SynthVoice voice(&triWave);
         voice.setSampleRate(sampleRate);
         voice.setDelay(delay);
-        voice.getEnvelope().setParameters(att, hold, dec, sus, rel);
+        voice.getAmpEnvelope().setParameters(aAtt, aHold, aDec, aSus, aRel);
+        voice.setFilterParameters(baseCutoff, envDepth);
+        voice.getFilterEnvelope().setParameters(fAtt, fHold, fDec, fSus, fRel);
+        
         AudioDevice audioEngine;
         if (audioEngine.initialize(&voice)) runAhdsrLoop(audioEngine, voice, "TRIANGLE WAVE");
     }
 
-    // 5. Noise Test
+    // 5. Noise Test (Will sound like ocean waves or wind sweeping in and out)
     {
         SynthVoice voice(&noiseWave);
         voice.setSampleRate(sampleRate);
         voice.setDelay(delay);
-        voice.getEnvelope().setParameters(att, hold, dec, sus, rel);
+        voice.getAmpEnvelope().setParameters(aAtt, aHold, aDec, aSus, aRel);
+        voice.setFilterParameters(baseCutoff, envDepth);
+        voice.getFilterEnvelope().setParameters(fAtt, fHold, fDec, fSus, fRel);
+        
         AudioDevice audioEngine;
         if (audioEngine.initialize(&voice)) runAhdsrLoop(audioEngine, voice, "NOISE");
     }

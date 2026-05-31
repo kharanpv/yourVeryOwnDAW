@@ -1,22 +1,30 @@
 #include "SynthVoice.h"
 
-// Constructor injects the raw oscillator and ensures the engine is ready.
 SynthVoice::SynthVoice(Oscillator* osc) 
     : currentOscillator(osc), sampleRate(44100.0f), 
+      filterBaseCutoff(200.0f), filterEnvDepth(4000.0f), // Starts low, pushes up by 4000Hz
       delaySampleCount(0.0f), currentDelaySample(0.0f), isDelaying(false) {
           
-    // Default snappy, punchy AHDSR envelope
-    // Attack: 0.01s, Hold: 0.05s, Decay: 0.1s, Sustain: 0.5 (50%), Release: 0.2s
-    envelope.setParameters(0.01f, 0.05f, 0.1f, 0.5f, 0.2f);
+    // Default Volume Envelope
+    ampEnvelope.setParameters(0.01f, 0.05f, 0.1f, 0.5f, 0.2f);
+    
+    // Default Filter Envelope (Decays faster than volume for a plucky sweep)
+    filterEnvelope.setParameters(0.01f, 0.0f, 0.15f, 0.1f, 0.2f);
 }
 
 void SynthVoice::setSampleRate(float newSampleRate) {
     sampleRate = newSampleRate;
-    envelope.setSampleRate(newSampleRate);
+    ampEnvelope.setSampleRate(newSampleRate);
+    filterEnvelope.setSampleRate(newSampleRate);
+    filter.setSampleRate(newSampleRate);
+}
+
+void SynthVoice::setFilterParameters(float baseCutoffHz, float envDepthHz) {
+    filterBaseCutoff = baseCutoffHz;
+    filterEnvDepth = envDepthHz;
 }
 
 void SynthVoice::setDelay(float delaySec) {
-    // Convert seconds to samples
     delaySampleCount = (delaySec > 0.0f) ? (delaySec * sampleRate) : 0.0f;
 }
 
@@ -26,54 +34,61 @@ void SynthVoice::setOscillator(Oscillator* newOsc) {
 
 void SynthVoice::triggerNote() {
     if (delaySampleCount > 0.0f) {
-        // Start the silent delay phase
         isDelaying = true;
         currentDelaySample = 0.0f;
     } else {
-        // Skip delay, trigger envelope immediately
         isDelaying = false;
-        envelope.triggerOn();
+        ampEnvelope.triggerOn();
+        filterEnvelope.triggerOn(); // Trigger BOTH
     }
 }
 
 void SynthVoice::releaseNote() {
-    isDelaying = false; // Cancel delay if the key is released early
-    envelope.triggerOff();
+    isDelaying = false;
+    ampEnvelope.triggerOff();
+    filterEnvelope.triggerOff(); // Release BOTH
 }
 
-AhdsrEnvelope& SynthVoice::getEnvelope() {
-    return envelope;
-}
+AhdsrEnvelope& SynthVoice::getAmpEnvelope() { return ampEnvelope; }
+AhdsrEnvelope& SynthVoice::getFilterEnvelope() { return filterEnvelope; }
 
-// Fills the hardware buffer and shapes the volume in a single pass.
 void SynthVoice::processAudio(float* buffer, int numSamples) {
     if (currentOscillator == nullptr) {
-        for (int i = 0; i < numSamples; ++i) {
-            buffer[i] = 0.0f;
-        }
+        for (int i = 0; i < numSamples; ++i) buffer[i] = 0.0f;
         return;
     }
 
-    // 1. Let the raw oscillator generate its continuous tone into the buffer.
+    // 1. Generate Raw Oscillator Buzz
     currentOscillator->processAudio(buffer, numSamples);
 
-    // 2. Shape that tone with the Pre-Delay and AHDSR envelope.
     for (int i = 0; i < numSamples; i += 2) {
         
-        // Handle the Delay Timer
+        // Handle Pre-Delay
         if (isDelaying) {
             currentDelaySample += 1.0f;
             if (currentDelaySample >= delaySampleCount) {
                 isDelaying = false;
-                envelope.triggerOn();
+                ampEnvelope.triggerOn();
+                filterEnvelope.triggerOn();
             }
         }
 
-        // Get the volume modifier (0.0 to 1.0)
-        float envMultiplier = envelope.process();
+        // --- SUBTRACTIVE SIGNAL CHAIN ---
 
-        // Apply the envelope to both channels
-        buffer[i] *= envMultiplier;       // Left channel
-        buffer[i + 1] *= envMultiplier;   // Right channel
+        // A. Filter Envelope Calculation
+        float filterEnvMultiplier = filterEnvelope.process();
+        float currentCutoff = filterBaseCutoff + (filterEnvMultiplier * filterEnvDepth);
+        filter.setCutoff(currentCutoff);
+
+        // B. Filter Block (Curve the straight lines)
+        // We only pass the Left channel (buffer[i]) because our synths are mono right now
+        float filteredSample = filter.process(buffer[i]);
+
+        // C. Amp Envelope Calculation
+        float ampMultiplier = ampEnvelope.process();
+
+        // D. Final Output (Filtered Sound * Volume Level)
+        buffer[i] = filteredSample * ampMultiplier;       
+        buffer[i + 1] = filteredSample * ampMultiplier;   
     }
 }
