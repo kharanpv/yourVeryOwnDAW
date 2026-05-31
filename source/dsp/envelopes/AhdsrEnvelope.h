@@ -1,19 +1,19 @@
 #pragma once
 
-// AdsrEnvelope
+// AhdsrEnvelope
 // A mathematical state-machine that generates a control signal between 0.0 and 1.0.
 // Used to shape the amplitude (or other parameters) of a sound over time.
-class AdsrEnvelope {
+class AhdsrEnvelope {
 public:
-    enum class State { Idle, Attack, Decay, Sustain, Release };
+    enum class State { Idle, Attack, Hold, Decay, Sustain, Release };
 
-    AdsrEnvelope();
+    AhdsrEnvelope();
 
     // Must be called so the envelope knows how fast time is moving.
     void setSampleRate(float newSampleRate);
     
-    // Configures the four stages of the envelope. Times are in seconds, levels are 0.0 to 1.0.
-    void setParameters(float attackSec, float decaySec, float sustainLvl, float releaseSec);
+    // Configures the five stages of the envelope. Times are in seconds, levels are 0.0 to 1.0.
+    void setParameters(float attackSec, float holdSec, float decaySec, float sustainLvl, float releaseSec);
 
     // Transitions the state machine.
     void triggerOn();
@@ -33,6 +33,10 @@ private:
     float attackInc;
     float decayInc;
     float releaseInc;
+    
+    // Timer variables for the Hold phase
+    float holdSampleCount;
+    float currentHoldSample;
     
     float sustainLevel;
 };

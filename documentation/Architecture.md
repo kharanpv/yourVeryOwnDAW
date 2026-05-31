@@ -14,8 +14,8 @@ This is the lowest-level layer. It talks directly to the OS and the soundcard. I
 ## 🔊 2. The Sound Engine (DSP & Synthesis)
 This lives inside the Audio Engine. It is the code that mathematically generates, shapes, and alters the audio signal.
 - [x] **Fundamental Oscillator Library:** Base `Oscillator` class and standard basic waveforms (Sine, Sawtooth, Square, Triangle, and White Noise).
-- [ ] **Subtractive Synthesis - Volume Envelope (ADSR):** A volume curve (Attack, Decay, Sustain, Release) so continuous tones have a distinct start and end.
-- [ ] **Subtractive Synthesis - Further Shaping:** Filters and additional modulation sources (to be defined as development progresses).
+- [x] **Amplitude & Delay Shaping (AHDSR):** A volume curve (Attack, Hold, Decay, Sustain, Release) plus a Pre-Delay timer so continuous tones have a precise, dynamic start and end.
+- [ ] **Subtractive Synthesis - Filter & VCF Envelope:** A digital resonant low-pass filter, modulated by its own independent AHDSR envelope to shape the frequency spectrum over time.
 - [ ] **Sampling:** Code to read `.wav` files into memory for drum playback and manipulation.
 - [ ] **Voice Allocation / Object Pooling:** Pre-allocating a fixed massive amount of tracks/voices at startup to simulate "infinite" tracks without causing memory spikes during playback.
 - [ ] **Backburner / Future Releases:** Frequency Modulation (FM) synthesis and Physical Modeling.

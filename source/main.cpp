@@ -16,8 +16,8 @@
 #include <thread>
 #include <atomic>
 
-// Helper function to run an automated ADSR loop while waiting for user input
-void runAdsrLoop(AudioDevice& engine, SynthVoice& voice, const std::string& waveName) {
+// Helper function to run an automated AHDSR loop while waiting for user input
+void runAhdsrLoop(AudioDevice& engine, SynthVoice& voice, const std::string& waveName) {
     // Thread-safe boolean to signal when the user has pressed Enter
     std::atomic<bool> moveToNext{false};
 
@@ -28,18 +28,18 @@ void runAdsrLoop(AudioDevice& engine, SynthVoice& voice, const std::string& wave
     });
 
     std::cout << "\n=== Playing " << waveName << " ===" << std::endl;
-    std::cout << "Auto-looping ADSR. Press Enter ONCE to switch to the next wave..." << std::endl;
+    std::cout << "Auto-looping AHDSR. Press Enter ONCE to switch to the next wave..." << std::endl;
 
     engine.start();
 
     // The main thread acts as an automated sequencer
     while (!moveToNext) {
-        std::cout << "  -> Triggering Note (Attack -> Decay -> Sustain)..." << std::endl;
+        std::cout << "  -> Triggering Note (Delay -> Attack -> Hold -> Decay -> Sustain)..." << std::endl;
         voice.triggerNote();
 
-        // Wait 2.0 seconds (Allows Attack and Decay to finish)
+        // Wait 3.0 seconds (Allows 0.5s Delay, 1.0s Attack, 0.5s Hold, and 1.0s Decay to finish)
         // We loop SDL_Delay in tiny chunks so the program can quit instantly if Enter is pressed
-        for (int i = 0; i < 20; ++i) {
+        for (int i = 0; i < 30; ++i) {
             if (moveToNext) break;
             SDL_Delay(100); 
         }
@@ -70,7 +70,7 @@ int main(int argc, char* argv[]) {
     }
 
     float sampleRate = 44100.0f;
-    float frequency = 440.0f; 
+    float frequency = 110.0f; // Dropped to 110Hz (Low A) so Saw and Square sound fatter
 
     SineOscillator sineWave(sampleRate, frequency);
     SquareOscillator squareWave(sampleRate, frequency);
@@ -78,48 +78,62 @@ int main(int argc, char* argv[]) {
     TriangleOscillator triWave(sampleRate, frequency);
     NoiseGenerator noiseWave(0.1f);
 
-    // We use a 1s Attack, 1s Decay, 20% Sustain, 2s Release
-    // This perfectly fits inside the 4.5 second delay cycle in our runAdsrLoop function
-    float att = 1.0f, dec = 1.0f, sus = 0.2f, rel = 2.0f;
+    // Our new 5-stage AHDSR + Pre-Delay configuration
+    float delay = 0.5f;
+    float att = 1.0f;
+    float hold = 0.5f;
+    float dec = 1.0f;
+    float sus = 0.2f;
+    float rel = 2.0f;
 
     // 1. Sine Test
     {
         SynthVoice voice(&sineWave);
-        voice.getEnvelope().setParameters(att, dec, sus, rel);
+        voice.setSampleRate(sampleRate);
+        voice.setDelay(delay);
+        voice.getEnvelope().setParameters(att, hold, dec, sus, rel);
         AudioDevice audioEngine;
-        if (audioEngine.initialize(&voice)) runAdsrLoop(audioEngine, voice, "SINE WAVE");
+        if (audioEngine.initialize(&voice)) runAhdsrLoop(audioEngine, voice, "SINE WAVE");
     }
 
     // 2. Square Test
     {
         SynthVoice voice(&squareWave);
-        voice.getEnvelope().setParameters(att, dec, sus, rel);
+        voice.setSampleRate(sampleRate);
+        voice.setDelay(delay);
+        voice.getEnvelope().setParameters(att, hold, dec, sus, rel);
         AudioDevice audioEngine;
-        if (audioEngine.initialize(&voice)) runAdsrLoop(audioEngine, voice, "SQUARE WAVE");
+        if (audioEngine.initialize(&voice)) runAhdsrLoop(audioEngine, voice, "SQUARE WAVE");
     }
 
     // 3. Sawtooth Test
     {
         SynthVoice voice(&sawWave);
-        voice.getEnvelope().setParameters(att, dec, sus, rel);
+        voice.setSampleRate(sampleRate);
+        voice.setDelay(delay);
+        voice.getEnvelope().setParameters(att, hold, dec, sus, rel);
         AudioDevice audioEngine;
-        if (audioEngine.initialize(&voice)) runAdsrLoop(audioEngine, voice, "SAWTOOTH WAVE");
+        if (audioEngine.initialize(&voice)) runAhdsrLoop(audioEngine, voice, "SAWTOOTH WAVE");
     }
 
     // 4. Triangle Test
     {
         SynthVoice voice(&triWave);
-        voice.getEnvelope().setParameters(att, dec, sus, rel);
+        voice.setSampleRate(sampleRate);
+        voice.setDelay(delay);
+        voice.getEnvelope().setParameters(att, hold, dec, sus, rel);
         AudioDevice audioEngine;
-        if (audioEngine.initialize(&voice)) runAdsrLoop(audioEngine, voice, "TRIANGLE WAVE");
+        if (audioEngine.initialize(&voice)) runAhdsrLoop(audioEngine, voice, "TRIANGLE WAVE");
     }
 
     // 5. Noise Test
     {
         SynthVoice voice(&noiseWave);
-        voice.getEnvelope().setParameters(att, dec, sus, rel);
+        voice.setSampleRate(sampleRate);
+        voice.setDelay(delay);
+        voice.getEnvelope().setParameters(att, hold, dec, sus, rel);
         AudioDevice audioEngine;
-        if (audioEngine.initialize(&voice)) runAdsrLoop(audioEngine, voice, "NOISE");
+        if (audioEngine.initialize(&voice)) runAhdsrLoop(audioEngine, voice, "NOISE");
     }
 
     std::cout << "\nTest complete. Terminating DAW..." << std::endl;
