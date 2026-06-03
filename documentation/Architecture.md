@@ -16,11 +16,12 @@ This lives inside the Audio Engine. It is the code that mathematically generates
 - [x] **Fundamental Oscillator Library:** Base `Oscillator` class and standard basic waveforms (Sine, Sawtooth, Square, Triangle, and White Noise).
 - [x] **Amplitude & Delay Shaping (AHDSR):** A volume curve (Attack, Hold, Decay, Sustain, Release) plus a Pre-Delay timer so continuous tones have a precise, dynamic start and end.
 - [x] **Subtractive Synthesis - Pure 4-Pole Filter & Envelope:** A digital 4-pole low-pass filter cascade, modulated by its own independent AHDSR envelope to smoothly curve the wave's sharp digital jumps over time.
-- [ ] **Filter Resonance (Feedback Loop):** Implementing a mathematical feedback path from the 4th filter stage back to the input to amplify the cutoff frequency and add analog "squelch/whistle."
-- [ ] **Synth Parameter UX & Real-Time Manipulation:** Establishing a robust interactive control layout (mapped to keyboards/gamepads) to actively dial in envelope times, depths, and cutoffs in a live testground environment before moving to full tracking.
-- [ ] **Sampling:** Code to read `.wav` files into memory for drum playback and manipulation.
-- [ ] **Voice Allocation / Object Pooling:** Pre-allocating a fixed massive amount of tracks/voices at startup to simulate "infinite" tracks without causing memory spikes during playback.
-- [ ] **Backburner / Future Releases:** Frequency Modulation (FM) synthesis and Physical Modeling.
+- [x] **Filter Resonance (Feedback Loop):** Implementing a mathematical feedback path from the 4th filter stage back to the input to amplify the cutoff frequency and add analog "squelch/whistle."
+- [ ] **Synth Parameter UX (The Debug/Test Environment):** Establishing a robust interactive graphical interface (Dear ImGui) mapped to hardware inputs. This provides a real-time testing ground to dial in envelopes and filters before writing more complex DSP.
+- [ ] **Low Frequency Oscillators (LFO):** Reusing core oscillator math at sub-audio rates (0.1Hz - 20Hz) to continuously modulate pitch, volume, or filter cutoff for evolving, moving sounds.
+- [ ] **Sampling Engine:** Memory allocation and bit-parsing to load `.wav` files into RAM for polyphonic drum playback and pitch manipulation.
+- [ ] **Voice Allocation / Object Pooling:** Pre-allocating a fixed, massive pool of synthesizer and sampler voices at startup to simulate "infinite" track counts without triggering memory allocation faults on the audio thread.
+- [ ] **Backburner / Future Releases:** Frequency Modulation (FM) synthesis, Pitch Glide (Portamento), and Physical Modeling.
 
 ## 🕹️ 3. The Input / Routing Layer (The Nervous System)
 This handles the controller data and bridges the human to the machine.

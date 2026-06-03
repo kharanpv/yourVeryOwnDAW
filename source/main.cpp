@@ -1,4 +1,3 @@
-// Tell SDL not to hijack the main entry point
 #define SDL_MAIN_HANDLED
 
 #include "core/AudioDevice.h"
@@ -7,8 +6,6 @@
 #include "dsp/oscillators/SawOscillator.h"
 #include "dsp/oscillators/TriangleOscillator.h"
 #include "dsp/oscillators/NoiseGenerator.h"
-
-// IMPORTANT: Update this include path based on your folder restructuring
 #include "dsp/SynthVoice.h" 
 
 #include <SDL2/SDL.h>
@@ -16,29 +13,68 @@
 #include <thread>
 #include <atomic>
 
-// Helper function to run an automated AHDSR loop while waiting for user input
-void runAhdsrLoop(AudioDevice& engine, SynthVoice& voice, const std::string& waveName) {
-    // Thread-safe boolean to signal when the user has pressed Enter
+// Cycles through 4 distinct synthesizer configurations.
+// Runs continuously until the user advances to the next oscillator via standard input.
+void runOscillatorTestSequence(AudioDevice& engine, SynthVoice& voice, const std::string& waveName) {
     std::atomic<bool> moveToNext{false};
 
-    // Spawn a background thread to listen for the Enter key
     std::thread inputThread([&moveToNext]() {
         std::cin.get();
         moveToNext = true;
     });
 
-    std::cout << "\n=== Playing " << waveName << " ===" << std::endl;
-    std::cout << "Auto-looping AHDSR Filter Sweep. Press Enter ONCE to switch to the next wave..." << std::endl;
+    std::cout << "\n========================================" << std::endl;
+    std::cout << " INITIALIZING OSCILLATOR: " << waveName << std::endl;
+    std::cout << " Press [ENTER] to advance to the next waveform." << std::endl;
+    std::cout << "========================================" << std::endl;
 
     engine.start();
 
-    // The main thread acts as an automated sequencer
+    int currentMode = 0;
+
     while (!moveToNext) {
-        std::cout << "  -> Triggering Note (Delay -> Attack -> Hold -> Decay -> Sustain)..." << std::endl;
+        // Dynamically reconfigure the voice parameters based on the current sequence mode
+        switch (currentMode) {
+            case 0:
+                std::cout << "\n [Mode 1/4] Raw Oscillating Wave (Gate Envelope, No Filter)" << std::endl;
+                voice.setDelay(0.0f);
+                // Instant attack and release, full sustain to simulate a basic gate
+                voice.getAmpEnvelope().setParameters(0.01f, 1.0f, 0.0f, 1.0f, 0.01f);
+                // Bypass filter by opening it entirely
+                voice.setFilterParameters(20000.0f, 0.0f); 
+                voice.setFilterResonance(0.0f);
+                break;
+
+            case 1:
+                std::cout << "\n [Mode 2/4] Amplitude Envelope Applied (AHDSR)" << std::endl;
+                voice.setDelay(0.5f);
+                voice.getAmpEnvelope().setParameters(1.0f, 0.5f, 1.0f, 0.2f, 2.0f);
+                voice.setFilterParameters(20000.0f, 0.0f);
+                voice.setFilterResonance(0.0f);
+                break;
+
+            case 2:
+                std::cout << "\n [Mode 3/4] 4-Pole Low Pass Filter Sweep Added (No Resonance)" << std::endl;
+                voice.setDelay(0.5f);
+                voice.getAmpEnvelope().setParameters(1.0f, 0.5f, 1.0f, 0.2f, 2.0f);
+                voice.setFilterParameters(100.0f, 6000.0f); // Sweep from 100Hz to 6100Hz
+                voice.setFilterResonance(0.0f);
+                break;
+
+            case 3:
+                std::cout << "\n [Mode 4/4] Resonance Added (Analog-style Squelch)" << std::endl;
+                voice.setDelay(0.5f);
+                voice.getAmpEnvelope().setParameters(1.0f, 0.5f, 1.0f, 0.2f, 2.0f);
+                voice.setFilterParameters(100.0f, 6000.0f);
+                // Set resonance high enough to generate a sharp peak, keeping below self-oscillation (4.0)
+                voice.setFilterResonance(3.5f); 
+                break;
+        }
+
+        std::cout << "  -> Note ON" << std::endl;
         voice.triggerNote();
 
-        // Wait 3.0 seconds (Allows 0.5s Delay, 1.0s Attack, 0.5s Hold, and 1.0s Decay to finish)
-        // We loop SDL_Delay in tiny chunks so the program can quit instantly if Enter is pressed
+        // Hold phase: Wait 3.0 seconds for Delay -> Attack -> Hold -> Decay
         for (int i = 0; i < 30; ++i) {
             if (moveToNext) break;
             SDL_Delay(100); 
@@ -46,129 +82,99 @@ void runAhdsrLoop(AudioDevice& engine, SynthVoice& voice, const std::string& wav
 
         if (moveToNext) break;
 
-        std::cout << "  -> Releasing Note (Release phase)..." << std::endl;
+        std::cout << "  -> Note OFF" << std::endl;
         voice.releaseNote();
 
-        // Wait 2.5 seconds for the sound to fade out completely before re-triggering
+        // Release phase: Wait 2.5 seconds for amplitude to return to 0.0
         for (int i = 0; i < 25; ++i) {
             if (moveToNext) break;
             SDL_Delay(100);
         }
+
+        // Advance and wrap the mode counter
+        currentMode = (currentMode + 1) % 4;
     }
 
     engine.stop();
-    inputThread.join(); // Safely clean up the input thread before moving to the next waveform
+    inputThread.join(); 
 }
 
 int main(int argc, char* argv[]) {
     SDL_SetMainReady();
     
-    // We add SDL_INIT_TIMER so we can use SDL_Delay safely
     if (SDL_Init(SDL_INIT_AUDIO | SDL_INIT_TIMER) < 0) {
         std::cerr << "SDL Initialization failed: " << SDL_GetError() << std::endl;
         return 1;
     }
 
-    float sampleRate = 44100.0f;
-    float frequency = 110.0f; // Dropped to 110Hz (Low A) so Saw and Square sound fatter
+    const float sampleRate = 44100.0f;
+    const float frequency = 110.0f; 
 
+    // Initialize core oscillators
     SineOscillator sineWave(sampleRate, frequency);
     SquareOscillator squareWave(sampleRate, frequency);
     SawOscillator sawWave(sampleRate, frequency);
     TriangleOscillator triWave(sampleRate, frequency);
     NoiseGenerator noiseWave(0.1f);
 
-    // -------------------------------------------------------------
-    // SYNTHESIZER PATCH CONFIGURATION
-    // -------------------------------------------------------------
-    float delay = 0.5f;
+    // Ensure the filter envelope uses standard settings for the sequence
+    const float fAtt = 1.0f;
+    const float fHold = 0.0f;
+    const float fDec = 1.5f;
+    const float fSus = 0.1f;
+    const float fRel = 2.0f;
 
-    // 1. Amp Envelope (Volume Level)
-    float aAtt = 1.0f;
-    float aHold = 0.5f;
-    float aDec = 1.0f;
-    float aSus = 0.2f;
-    float aRel = 2.0f;
-
-    // 2. Filter Envelope (Brightness / Cutoff Movement)
-    float fAtt = 1.0f;
-    float fHold = 0.0f;
-    float fDec = 1.5f;
-    float fSus = 0.1f;
-    float fRel = 2.0f;
-
-    // 3. Filter Parameters (Frequency bounds)
-    float baseCutoff = 100.0f; // Starts extremely dark/muffled
-    float envDepth = 6000.0f;  // Sweeps all the way up to 6100Hz at peak attack
-    // -------------------------------------------------------------
-
-
-    // 1. Sine Test (Will sound mostly like volume changes, no high harmonics to filter)
+    // 1. Sine
     {
         SynthVoice voice(&sineWave);
         voice.setSampleRate(sampleRate);
-        voice.setDelay(delay);
-        voice.getAmpEnvelope().setParameters(aAtt, aHold, aDec, aSus, aRel);
-        voice.setFilterParameters(baseCutoff, envDepth);
         voice.getFilterEnvelope().setParameters(fAtt, fHold, fDec, fSus, fRel);
         
         AudioDevice audioEngine;
-        if (audioEngine.initialize(&voice)) runAhdsrLoop(audioEngine, voice, "SINE WAVE");
+        if (audioEngine.initialize(&voice)) runOscillatorTestSequence(audioEngine, voice, "SINE WAVE");
     }
 
-    // 2. Square Test (The filter sweep will be incredibly obvious here)
+    // 2. Square
     {
         SynthVoice voice(&squareWave);
         voice.setSampleRate(sampleRate);
-        voice.setDelay(delay);
-        voice.getAmpEnvelope().setParameters(aAtt, aHold, aDec, aSus, aRel);
-        voice.setFilterParameters(baseCutoff, envDepth);
         voice.getFilterEnvelope().setParameters(fAtt, fHold, fDec, fSus, fRel);
         
         AudioDevice audioEngine;
-        if (audioEngine.initialize(&voice)) runAhdsrLoop(audioEngine, voice, "SQUARE WAVE");
+        if (audioEngine.initialize(&voice)) runOscillatorTestSequence(audioEngine, voice, "SQUARE WAVE");
     }
 
-    // 3. Sawtooth Test (Classic analog brass/string sweep)
+    // 3. Sawtooth
     {
         SynthVoice voice(&sawWave);
         voice.setSampleRate(sampleRate);
-        voice.setDelay(delay);
-        voice.getAmpEnvelope().setParameters(aAtt, aHold, aDec, aSus, aRel);
-        voice.setFilterParameters(baseCutoff, envDepth);
         voice.getFilterEnvelope().setParameters(fAtt, fHold, fDec, fSus, fRel);
         
         AudioDevice audioEngine;
-        if (audioEngine.initialize(&voice)) runAhdsrLoop(audioEngine, voice, "SAWTOOTH WAVE");
+        if (audioEngine.initialize(&voice)) runOscillatorTestSequence(audioEngine, voice, "SAWTOOTH WAVE");
     }
 
-    // 4. Triangle Test (Gentler sweep)
+    // 4. Triangle
     {
         SynthVoice voice(&triWave);
         voice.setSampleRate(sampleRate);
-        voice.setDelay(delay);
-        voice.getAmpEnvelope().setParameters(aAtt, aHold, aDec, aSus, aRel);
-        voice.setFilterParameters(baseCutoff, envDepth);
         voice.getFilterEnvelope().setParameters(fAtt, fHold, fDec, fSus, fRel);
         
         AudioDevice audioEngine;
-        if (audioEngine.initialize(&voice)) runAhdsrLoop(audioEngine, voice, "TRIANGLE WAVE");
+        if (audioEngine.initialize(&voice)) runOscillatorTestSequence(audioEngine, voice, "TRIANGLE WAVE");
     }
 
-    // 5. Noise Test (Will sound like ocean waves or wind sweeping in and out)
+    // 5. Noise
     {
         SynthVoice voice(&noiseWave);
         voice.setSampleRate(sampleRate);
-        voice.setDelay(delay);
-        voice.getAmpEnvelope().setParameters(aAtt, aHold, aDec, aSus, aRel);
-        voice.setFilterParameters(baseCutoff, envDepth);
         voice.getFilterEnvelope().setParameters(fAtt, fHold, fDec, fSus, fRel);
         
         AudioDevice audioEngine;
-        if (audioEngine.initialize(&voice)) runAhdsrLoop(audioEngine, voice, "NOISE");
+        if (audioEngine.initialize(&voice)) runOscillatorTestSequence(audioEngine, voice, "NOISE");
     }
 
-    std::cout << "\nTest complete. Terminating DAW..." << std::endl;
+    std::cout << "\nSequence complete. Terminating DAW audio engine..." << std::endl;
     SDL_Quit();
     return 0;
 }

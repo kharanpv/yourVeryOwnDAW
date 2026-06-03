@@ -3,7 +3,7 @@
 #include <algorithm>
 
 LowPassFilter::LowPassFilter() 
-    : sampleRate(44100.0f), cutoff(1000.0f), g(0.0f),
+    : sampleRate(44100.0f), cutoff(1000.0f), resonance(0.0f), g(0.0f), // Init resonance
       stage1(0.0f), stage2(0.0f), stage3(0.0f), stage4(0.0f) {}
 
 void LowPassFilter::setSampleRate(float newSampleRate) {
@@ -18,11 +18,19 @@ void LowPassFilter::setCutoff(float cutoffHz) {
     g = 1.0f - std::exp(-2.0f * 3.14159265359f * cutoff / sampleRate);
 }
 
+void LowPassFilter::setResonance(float newResonance) {
+    // Safely clamp between 0.0 (off) and 3.99 (max squeal before blowing up)
+    resonance = std::clamp(newResonance, 0.0f, 3.99f);
+}
+
 float LowPassFilter::process(float inputSample) {
+    // Subtract a percentage of the previous final output from the raw input
+    float resonatedInput = inputSample - (stage4 * resonance);
+
     // Cascade the 4 mathematical poles (Difference Equations)
     // Formula: Output = Output + g * (Input - Output)
     
-    stage1 = stage1 + g * (inputSample - stage1); // Pole 1
+    stage1 = stage1 + g * (resonatedInput - stage1); 
     stage2 = stage2 + g * (stage1 - stage2);      // Pole 2
     stage3 = stage3 + g * (stage2 - stage3);      // Pole 3
     stage4 = stage4 + g * (stage3 - stage4);      // Pole 4 (Final Smooth Output)

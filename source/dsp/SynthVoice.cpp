@@ -24,6 +24,10 @@ void SynthVoice::setFilterParameters(float baseCutoffHz, float envDepthHz) {
     filterEnvDepth = envDepthHz;
 }
 
+void SynthVoice::setFilterResonance(float resonance) {
+    filter.setResonance(resonance);
+}
+
 void SynthVoice::setDelay(float delaySec) {
     delaySampleCount = (delaySec > 0.0f) ? (delaySec * sampleRate) : 0.0f;
 }

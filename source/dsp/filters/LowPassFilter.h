@@ -11,12 +11,16 @@ public:
     // Cutoff is the frequency (in Hz) where the filter starts smoothing.
     void setCutoff(float cutoffHz);
 
+    // NEW: Sets the resonance feedback amount (0.0 to 4.0)
+    void setResonance(float newResonance);
+
     // Processes a single audio sample through the 4 cascade stages
     float process(float inputSample);
 
 private:
     float sampleRate;
     float cutoff;
+    float resonance; // NEW: The feedback multiplier
 
     // The mathematical "smoothing" factor
     float g; 
