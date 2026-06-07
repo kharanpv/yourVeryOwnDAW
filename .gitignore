@@ -2,6 +2,13 @@
 # 🎛️ Open Source Groovebox .gitignore
 # ==========================================
 
+# --- Zed Editor Specifics ---
+.zed/
+
+# --- Language Server / Autocomplete ---
+compile_commands.json
+.cache/
+
 # --- VS Code & IDE Specifcs ---
 .history/
 .vscode/ipch/

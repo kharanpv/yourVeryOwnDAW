@@ -5,6 +5,9 @@ project(Your_Very_Own_DAW VERSION 0.1.0 LANGUAGES CXX)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
+# Bypass SDL2's legacy prefetch hack for modern Clang
+add_compile_definitions(__PRFCHWINTRIN_H)
+
 # ---------------------------------------------------------
 # Dependency Management: Automatically fetch and build SDL2
 # ---------------------------------------------------------
@@ -36,7 +39,7 @@ file(GLOB_RECURSE SRC_FILES CONFIGURE_DEPENDS
 add_executable(${PROJECT_NAME} ${SRC_FILES})
 
 # Link the static SDL2 library to the YVO-DAW executable
-target_link_libraries(${PROJECT_NAME} PRIVATE SDL2-static)
+target_link_libraries(${PROJECT_NAME} PRIVATE SDL2main SDL2-static)
 
 # Include directories so compiler can find headers without relative path nightmares
 target_include_directories(${PROJECT_NAME} PRIVATE source)
