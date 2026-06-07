@@ -10,11 +10,12 @@ This document outlines the implementation path for the synthesis debugging HUD. 
 
 Before drawing graphics, we must capture and process raw keyboard data using time-based logic to emulate hardware encoders.
 
-* [ ] **Dynamic Keymap Router:** Create a mapping layer that connects raw `SDL_Keycode` inputs to logical engine actions (e.g., `ACTION_AUDITION_NOTE_1`, `ACTION_PARAM_UP`). This ensures the UI can dynamically display current keybindings and easily support custom user layouts in the future.
-* [ ] **Virtual Knob Acceleration:** Implement a state tracker that records how long an `ACTION_PARAM_UP` or `DOWN` key is held.
+* [x] **Dynamic Keymap Router:** Create a mapping layer that connects raw `SDL_Keycode` inputs to logical engine actions (e.g., `ACTION_AUDITION_NOTE_1`, `ACTION_PARAM_UP`). This ensures the UI can dynamically display current keybindings and easily support custom user layouts in the future.
+* [x] **Virtual Knob Acceleration:** Implement a state tracker that records how long an `ACTION_PARAM_UP` or `DOWN` key is held.
   * **Tap:** Increments/decrements by a micro-amount (Fine Tuning).
   * **Hold:** Applies an exponential multiplier to the rate of change the longer the key is depressed, allowing the user to "fly" to a target value quickly.
-* [ ] **The "Latch" Toggle:** Implement logic for a specific key (default: `Spacebar`) that suppresses `Note Off` messages. This allows a triggered note to drone endlessly so the user's hands are free to tweak parameters.
+* [x] **The "Latch" Toggle:** Implement logic for a specific key (default: `Spacebar`) that suppresses `Note Off` messages. This allows a triggered note to drone endlessly so the user's hands are free to tweak parameters.
+* [x] **Configuration Loader:** Parse a `settings.json` file on boot to dynamically load user keybindings and virtual knob tuning variables into the engine without recompiling.
 
 ### Phase 2: The Auditory Feedback Loop
 

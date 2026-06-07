@@ -5,6 +5,9 @@ project(Your_Very_Own_DAW VERSION 0.1.0 LANGUAGES CXX)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
+# To ensure that clangd can read the CMake list
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+
 # Bypass SDL2's legacy prefetch hack for modern Clang
 add_compile_definitions(__PRFCHWINTRIN_H)
 
@@ -43,3 +46,6 @@ target_link_libraries(${PROJECT_NAME} PRIVATE SDL2main SDL2-static)
 
 # Include directories so compiler can find headers without relative path nightmares
 target_include_directories(${PROJECT_NAME} PRIVATE source)
+
+# Include 3rd party libraries from `include` folder
+target_include_directories(${PROJECT_NAME} PRIVATE include)

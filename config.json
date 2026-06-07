@@ -1,0 +1,13 @@
+{
+    "hardware_emulation": {
+        "knob_acceleration_curve": 4.0,
+        "knob_hold_delay_ms": 300
+    },
+    "keybindings": {
+        "Up": "NAV_UP",
+        "Down": "NAV_DOWN",
+        "Q": "AUDITION_NOTE_1",
+        "W": "AUDITION_NOTE_2",
+        "Space": "TOGGLE_LATCH"
+    }
+}

@@ -1,4 +1,3 @@
-```markdown
 # Your Very Own DAW-less DAW
 
 Open Source DAW meant to be used DAWless on your own computer.
@@ -48,12 +47,12 @@ Because Windows handles the Clang compiler slightly differently than Unix-based 
 
 * **For Windows:**
   ```powershell
-  cmake -S . -B build -G Ninja -DCMAKE_C_COMPILER=clang-cl -DCMAKE_CXX_COMPILER=clang-cl -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
+  cmake -S . -B build -G Ninja -DCMAKE_C_COMPILER=clang-cl -DCMAKE_CXX_COMPILER=clang-cl
   ```
 
 * **For macOS / Linux:**
   ```bash
-  cmake -S . -B build -G Ninja -DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++ -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
+  cmake -S . -B build -G Ninja -DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++
   ```
 
 > Optional: If you are using an editor like Zed, copy the generated `compile_commands.json` from the `build` folder to your root directory for native C++ autocomplete.

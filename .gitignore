@@ -6,7 +6,7 @@
 .zed/
 
 # --- Language Server / Autocomplete ---
-compile_commands.json
+.clangd
 .cache/
 
 # --- VS Code & IDE Specifcs ---
