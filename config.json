@@ -6,8 +6,22 @@
     "keybindings": {
         "Up": "NAV_UP",
         "Down": "NAV_DOWN",
-        "Q": "AUDITION_NOTE_1",
-        "W": "AUDITION_NOTE_2",
-        "Space": "TOGGLE_LATCH"
+        "[": "PARAM_DEC",
+        "]": "PARAM_INC",
+        "Space": "TOGGLE_LATCH",
+        
+        "A": "AUDITION_NOTE_C4",
+        "W": "AUDITION_NOTE_CS4",
+        "S": "AUDITION_NOTE_D4",
+        "E": "AUDITION_NOTE_DS4",
+        "D": "AUDITION_NOTE_E4",
+        "F": "AUDITION_NOTE_F4",
+        "T": "AUDITION_NOTE_FS4",
+        "G": "AUDITION_NOTE_G4",
+        "Y": "AUDITION_NOTE_GS4",
+        "H": "AUDITION_NOTE_A4",
+        "U": "AUDITION_NOTE_AS4",
+        "J": "AUDITION_NOTE_B4",
+        "K": "AUDITION_NOTE_C5"
     }
 }

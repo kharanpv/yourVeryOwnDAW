@@ -17,25 +17,21 @@ Before drawing graphics, we must capture and process raw keyboard data using tim
 * [x] **The "Latch" Toggle:** Implement logic for a specific key (default: `Spacebar`) that suppresses `Note Off` messages. This allows a triggered note to drone endlessly so the user's hands are free to tweak parameters.
 * [x] **Configuration Loader:** Parse a `settings.json` file on boot to dynamically load user keybindings and virtual knob tuning variables into the engine without recompiling.
 
-### Phase 2: The Auditory Feedback Loop
+### Phase 2: The UI Canvas & Render Loop
+Before we can test our inputs or visualize audio, we must construct the empty room where the interface will live and establish the application's master infinite loop.
+* **[See UI_Architecture.md for the complete build-out of this layer.](./UI_Architecture.md)**
+* [ ] **SDL2 Window Initialization:** Open a blank, hardware-accelerated desktop window.
+* [ ] **Dear ImGui Context:** Attach the ImGui rendering framework to the SDL window.
+* [ ] **The Master Loop:** Write the 60 FPS `while(running)` loop in `main.cpp` that keeps the application alive, polls for hardware inputs, and pushes pixels to the screen.
 
-The UI thread must translate the abstracted inputs into immediate DSP changes without causing thread locks.
+### Phase 3: The Auditory Feedback Loop (The Wiring)
+With the UI canvas running, we translate our abstracted keyboard inputs into immediate DSP changes without causing thread locks.
+* [ ] **Live Parameter Injection:** When a parameter is actively being modified via the Virtual Knob logic, the new float value must be safely written to the Audio Thread (via `std::atomic` variables) so the user hears the filter sweep as the number changes on screen.
+* [ ] **The Audition Row:** Map the A through K keys to a 12-note chromatic scale (C4 to C5). Pressing these immediately fires a `Note On` event to the `SynthVoice` to test frequency response.
+* [ ] **The Parameter Matrix UI:** Render a clean vertical list of available DSP parameters in ImGui. Use a highly visible cursor (e.g., `>`) to indicate which parameter is currently targeted.
 
-* [ ] **Live Parameter Injection:** When a parameter is actively being modified via the Virtual Knob logic, the new float value must be safely written to the Audio Thread (via atomic variables or a lock-free queue) so the user hears the filter sweep as the number changes on screen.
-* [ ] **The Audition Row:** Map the `Q` through `]` keys to a 12-note chromatic scale (C4 to B4). Pressing these immediately fires a `Note On` event to the `SynthVoice` to test frequency response at different pitches.
-
-### Phase 3: Telemetry & The Data Bridge
-
+### Phase 4: Telemetry & The Data Bridge (The Oscilloscope)
 To visualize the DSP, we need to get high-speed audio data back to the slow UI thread safely.
-
 * [ ] **Thread-Safe Circular Buffer:** Allocate a fixed-size array. The high-priority Audio Thread writes every Nth generated audio sample into this buffer.
 * [ ] **Buffer Synchronization:** Ensure the UI thread can safely read a snapshot of this buffer at 60 FPS without interrupting the Audio Thread's write cycle.
-
-### Phase 4: HUD Rendering (Dear ImGui)
-
-Constructing the visual "Hardware Screen" on the blank application canvas.
-
-* [ ] **The Resizable Container:** Create a single Dear ImGui window (`ImGui::Begin`) configured with a dark, high-contrast theme. It must be user-scalable to fit different monitor sizes or testing scenarios.
-* [ ] **The Oscilloscope:** Use `ImGui::PlotLines` fed by the Circular Buffer to draw a real-time representation of the synthesized waveform.
-* [ ] **The Parameter Matrix:** Render a clean vertical list of available DSP parameters. Use a highly visible cursor (e.g., `>`) to indicate which parameter is currently targeted by the Virtual Knobs.
-* [ ] **The Dynamic Keymap Legend:** A footer at the bottom of the HUD that polls the `Dynamic Keymap Router` and displays exactly which physical keys currently control the Virtual Knobs and Audition Row.
+* [ ] **Oscilloscope Rendering:** Use `ImGui::PlotLines` fed by the Circular Buffer to draw a real-time representation of the synthesized waveform on our UI canvas.
