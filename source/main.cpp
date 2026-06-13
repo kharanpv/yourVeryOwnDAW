@@ -1,10 +1,10 @@
 #include <iostream>
 #include "ui/AppWindow.h"
+#include "imgui.h" // We include this here just to call ShowDemoWindow()
 
 int main(int argc, char* argv[]) {
     std::cout << "Booting Open Source DAW..." << std::endl;
 
-    // 1. Initialize our new UI Window
     AppWindow appWindow;
     if (!appWindow.initialize("Groovebox Diagnostic HUD", 1024, 768)) {
         std::cerr << "Failed to boot UI canvas. Exiting." << std::endl;
@@ -13,22 +13,28 @@ int main(int argc, char* argv[]) {
 
     std::cout << "UI Canvas established. Entering main loop." << std::endl;
 
-    // 2. The Master Render Loop (60 FPS)
+    // The Master Render Loop (60 FPS)
     while (appWindow.isRunning()) {
         
-        // Phase 1: Poll OS Events (Keyboard, Mouse, Window Closing)
+        // 1. Drain OS Events & Feed them to ImGui
         appWindow.processEvents();
 
-        // Phase 2: Clear the previous frame
+        // 2. Start the immediate-mode UI frame
+        appWindow.beginUiFrame();
+
+        // 3. Define the UI (This disappears every frame!)
+        ImGui::ShowDemoWindow(); 
+
+        // 4. Wipe the hardware screen
         appWindow.clear();
 
-        // Phase 3: (Future) Tell Dear ImGui to draw the Dashboard here
+        // 5. Draw the UI geometry over the wiped screen
+        appWindow.drawUi();
 
-        // Phase 4: Push the pixels to the monitor
+        // 6. Push the pixels to the monitor
         appWindow.present();
     }
 
-    // 3. Clean Shutdown
     std::cout << "Shutting down engine safely." << std::endl;
     appWindow.shutdown();
 

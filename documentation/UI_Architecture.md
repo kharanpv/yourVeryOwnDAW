@@ -23,9 +23,9 @@ Build the generic OS window host that will eventually house all of our Groovebox
 
 ### Step 2: The UI Rendering Engine (Dear ImGui)
 Integrate the immediate-mode GUI library to allow rapid interface development.
-* [ ] **CMake Integration:** Add Dear ImGui (and its SDL2 backend files) to the `CMakeLists.txt` build system.
-* [ ] **Context Initialization:** Initialize the ImGui context inside the `AppWindow` boot sequence.
-* [ ] **Proof of Life:** Successfully render `ImGui::ShowDemoWindow()` inside the main loop to verify fonts and hardware acceleration are working.
+* [x] **CMake Integration:** Add Dear ImGui (and its SDL2 backend files) to the `CMakeLists.txt` build system.
+* [x] **Context Initialization:** Initialize the ImGui context inside the `AppWindow` boot sequence.
+* [x] **Proof of Life:** Successfully render `ImGui::ShowDemoWindow()` inside the main loop to verify fonts and hardware acceleration are working.
 
 ### Step 3: The Data Bridge
 Establish the thread-safe connection between the upcoming UI and the existing DSP engine.

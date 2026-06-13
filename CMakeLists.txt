@@ -41,6 +41,24 @@ file(GLOB_RECURSE SRC_FILES CONFIGURE_DEPENDS
 # Define the executable using the dynamically generated list
 add_executable(${PROJECT_NAME} ${SRC_FILES})
 
+# Tell the compiler where to find ImGui's header files
+target_include_directories(${PROJECT_NAME} PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}/external/imgui
+    ${CMAKE_CURRENT_SOURCE_DIR}/external/imgui/backends
+)
+
+# Tell the compiler which ImGui source files to compile into your DAW
+target_sources(${PROJECT_NAME} PRIVATE
+    external/imgui/imgui.cpp
+    external/imgui/imgui_demo.cpp
+    external/imgui/imgui_draw.cpp
+    external/imgui/imgui_tables.cpp
+    external/imgui/imgui_widgets.cpp
+    # We only want the SDL2 and SDL_Renderer backends, ignore all the DirectX/Vulkan ones!
+    external/imgui/backends/imgui_impl_sdl2.cpp
+    external/imgui/backends/imgui_impl_sdlrenderer2.cpp
+)
+
 # Link the static SDL2 library to the YVO-DAW executable
 target_link_libraries(${PROJECT_NAME} PRIVATE SDL2main SDL2-static)
 
