@@ -18,6 +18,7 @@ This lives inside the Audio Engine. It is the code that mathematically generates
 - [x] **Subtractive Synthesis - Pure 4-Pole Filter & Envelope:** A digital 4-pole low-pass filter cascade, modulated by its own independent AHDSR envelope to smoothly curve the wave's sharp digital jumps over time.
 - [x] **Filter Resonance (Feedback Loop):** Implementing a mathematical feedback path from the 4th filter stage back to the input to amplify the cutoff frequency and add analog "squelch/whistle."
 - [ ] **Synth Parameter UX (The Debug/Test Environment):** Establishing a robust interactive graphical interface (Dear ImGui) mapped to hardware inputs. This provides a real-time testing ground to dial in envelopes and filters before writing more complex DSP.
+  [See Synth_UX.md for the complete build-out of this layer.](./Synth_UX.md)
 - [ ] **Low Frequency Oscillators (LFO):** Reusing core oscillator math at sub-audio rates (0.1Hz - 20Hz) to continuously modulate pitch, volume, or filter cutoff for evolving, moving sounds.
 - [ ] **Sampling Engine:** Memory allocation and bit-parsing to load `.wav` files into RAM for polyphonic drum playback and pitch manipulation.
 - [ ] **Voice Allocation / Object Pooling:** Pre-allocating a fixed, massive pool of synthesizer and sampler voices at startup to simulate "infinite" track counts without triggering memory allocation faults on the audio thread.

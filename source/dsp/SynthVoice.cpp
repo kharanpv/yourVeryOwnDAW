@@ -1,15 +1,13 @@
 #include "SynthVoice.h"
 
-SynthVoice::SynthVoice(Oscillator* osc) 
-    : currentOscillator(osc), sampleRate(44100.0f), 
-      filterBaseCutoff(200.0f), filterEnvDepth(4000.0f), // Starts low, pushes up by 4000Hz
+// 1. Update Constructor to accept the Matrix
+SynthVoice::SynthVoice(Oscillator* osc, std::shared_ptr<SharedMatrix> sharedMatrix) 
+    : currentOscillator(osc), matrix(sharedMatrix), sampleRate(44100.0f), 
+      filterBaseCutoff(1000.0f), filterEnvDepth(2000.0f), 
       delaySampleCount(0.0f), currentDelaySample(0.0f), isDelaying(false) {
           
-    // Default Volume Envelope
-    ampEnvelope.setParameters(0.01f, 0.05f, 0.1f, 0.5f, 0.2f);
-    
-    // Default Filter Envelope (Decays faster than volume for a plucky sweep)
-    filterEnvelope.setParameters(0.01f, 0.0f, 0.15f, 0.1f, 0.2f);
+    // Notice we removed the hardcoded envelope parameters here!
+    // They will now be dynamically pulled from the Matrix in real-time.
 }
 
 void SynthVoice::setSampleRate(float newSampleRate) {
@@ -19,6 +17,8 @@ void SynthVoice::setSampleRate(float newSampleRate) {
     filter.setSampleRate(newSampleRate);
 }
 
+// These manual setters can stay for now, but eventually, 
+// the matrix handles everything!
 void SynthVoice::setFilterParameters(float baseCutoffHz, float envDepthHz) {
     filterBaseCutoff = baseCutoffHz;
     filterEnvDepth = envDepthHz;
@@ -37,6 +37,10 @@ void SynthVoice::setOscillator(Oscillator* newOsc) {
 }
 
 void SynthVoice::triggerNote() {
+    // Optionally, read the pre-delay from the matrix here when a note strikes
+    float preDelaySec = matrix->ampPreDelay.load();
+    delaySampleCount = (preDelaySec > 0.0f) ? (preDelaySec * sampleRate) : 0.0f;
+
     if (delaySampleCount > 0.0f) {
         isDelaying = true;
         currentDelaySample = 0.0f;
@@ -48,6 +52,9 @@ void SynthVoice::triggerNote() {
 }
 
 void SynthVoice::releaseNote() {
+    // If the Latch toggle is ON, completely ignore note off requests!
+    if (matrix->isLatched.load()) return;
+
     isDelaying = false;
     ampEnvelope.triggerOff();
     filterEnvelope.triggerOff(); // Release BOTH
@@ -57,12 +64,44 @@ AhdsrEnvelope& SynthVoice::getAmpEnvelope() { return ampEnvelope; }
 AhdsrEnvelope& SynthVoice::getFilterEnvelope() { return filterEnvelope; }
 
 void SynthVoice::processAudio(float* buffer, int numSamples) {
-    if (currentOscillator == nullptr) {
+    // Safety check: ensure both oscillator and matrix exist
+    if (currentOscillator == nullptr || matrix == nullptr) {
         for (int i = 0; i < numSamples; ++i) buffer[i] = 0.0f;
         return;
     }
 
-    // 1. Generate Raw Oscillator Buzz
+    // =========================================================
+    // 2. THE BRIDGE: Poll the Matrix for real-time UI changes!
+    // =========================================================
+    
+    // Update Amp Envelope
+    ampEnvelope.setParameters(
+        matrix->ampAttack.load(), 
+        matrix->ampHold.load(), 
+        matrix->ampDecay.load(), 
+        matrix->ampSustain.load(), 
+        matrix->ampRelease.load()
+    );
+
+    // Update Filter Envelope
+    filterEnvelope.setParameters(
+        matrix->filterAttack.load(), 
+        matrix->filterHold.load(), 
+        matrix->filterDecay.load(), 
+        matrix->filterSustain.load(), 
+        matrix->filterRelease.load()
+    );
+
+    // Update Filter Core
+    filterBaseCutoff = matrix->filterCutoff.load();
+    filterEnvDepth = matrix->filterEnvAmount.load();
+    filter.setResonance(matrix->filterResonance.load());
+
+    // =========================================================
+    // 3. PROCESS THE MATH
+    // =========================================================
+
+    // Generate Raw Oscillator Buzz
     currentOscillator->processAudio(buffer, numSamples);
 
     for (int i = 0; i < numSamples; i += 2) {
@@ -85,7 +124,6 @@ void SynthVoice::processAudio(float* buffer, int numSamples) {
         filter.setCutoff(currentCutoff);
 
         // B. Filter Block (Curve the straight lines)
-        // We only pass the Left channel (buffer[i]) because our synths are mono right now
         float filteredSample = filter.process(buffer[i]);
 
         // C. Amp Envelope Calculation

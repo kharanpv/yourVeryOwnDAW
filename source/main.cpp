@@ -1,42 +1,77 @@
 #include <iostream>
+#include <memory>
+
+// --- Core & Audio Headers ---
+#include "core/SharedMatrix.h"
+#include "core/AudioDevice.h" // Assuming this is your SDL Audio wrapper
+#include "dsp/SynthVoice.h"
+#include "dsp/oscillators/SawOscillator.h" // Default starting wave
+
+// --- UI Headers ---
 #include "ui/AppWindow.h"
-#include "imgui.h" // We include this here just to call ShowDemoWindow()
+#include "imgui.h"
 
 int main(int argc, char* argv[]) {
     std::cout << "Booting Open Source DAW..." << std::endl;
 
+    // =========================================================
+    // 1. ALLOCATE THE THREAD BRIDGE (The Single Source of Truth)
+    // =========================================================
+    auto sharedMatrix = std::make_shared<SharedMatrix>();
+
+    // =========================================================
+    // 2. BOOT THE AUDIO ENGINE
+    // =========================================================
+    SawOscillator defaultOsc(44100.0f, 440.0f);
+
+    // Pass the matrix to the synth voice!
+    SynthVoice myVoice(&defaultOsc, sharedMatrix);
+
+    AudioDevice audioDev;
+    if (!audioDev.initialize(&myVoice)) {
+        std::cerr << "Failed to open soundcard!" << std::endl;
+        return -1;
+    }
+    audioDev.start(); // Audio thread is now running in the background!
+
+    // =========================================================
+    // 3. BOOT THE VISUAL ENGINE (UI Canvas)
+    // =========================================================
     AppWindow appWindow;
     if (!appWindow.initialize("Groovebox Diagnostic HUD", 1024, 768)) {
         std::cerr << "Failed to boot UI canvas. Exiting." << std::endl;
         return -1;
     }
 
-    std::cout << "UI Canvas established. Entering main loop." << std::endl;
+    std::cout << "Engine fully booted. Entering main loop." << std::endl;
 
-    // The Master Render Loop (60 FPS)
+    // =========================================================
+    // 4. THE MASTER LOOP (60 FPS Main Thread)
+    // =========================================================
     while (appWindow.isRunning()) {
-        
-        // 1. Drain OS Events & Feed them to ImGui
+
+        // 1. Drain OS Events
         appWindow.processEvents();
 
         // 2. Start the immediate-mode UI frame
         appWindow.beginUiFrame();
 
-        // 3. Define the UI (This disappears every frame!)
-        ImGui::ShowDemoWindow(); 
+        // 3. Define the UI
+        // (FUTURE: This is where we will pass `sharedMatrix` to our upcoming SynthDashboard!)
+        ImGui::ShowDemoWindow();
 
-        // 4. Wipe the hardware screen
+        // 4. Wipe the screen & draw ImGui
         appWindow.clear();
-
-        // 5. Draw the UI geometry over the wiped screen
         appWindow.drawUi();
-
-        // 6. Push the pixels to the monitor
         appWindow.present();
     }
 
+    // =========================================================
+    // 5. CLEAN SHUTDOWN
+    // =========================================================
     std::cout << "Shutting down engine safely." << std::endl;
-    appWindow.shutdown();
+    audioDev.stop(); // Safely kill audio thread first
+    appWindow.shutdown(); // Then kill graphics
 
     return 0;
 }
@@ -49,7 +84,7 @@ int main(int argc, char* argv[]) {
 // #include "dsp/oscillators/SawOscillator.h"
 // #include "dsp/oscillators/TriangleOscillator.h"
 // #include "dsp/oscillators/NoiseGenerator.h"
-// #include "dsp/SynthVoice.h" 
+// #include "dsp/SynthVoice.h"
 
 // #include <SDL2/SDL.h>
 // #include <iostream>
@@ -84,7 +119,7 @@ int main(int argc, char* argv[]) {
 //                 // Instant attack and release, full sustain to simulate a basic gate
 //                 voice.getAmpEnvelope().setParameters(0.01f, 1.0f, 0.0f, 1.0f, 0.01f);
 //                 // Bypass filter by opening it entirely
-//                 voice.setFilterParameters(20000.0f, 0.0f); 
+//                 voice.setFilterParameters(20000.0f, 0.0f);
 //                 voice.setFilterResonance(0.0f);
 //                 break;
 
@@ -110,7 +145,7 @@ int main(int argc, char* argv[]) {
 //                 voice.getAmpEnvelope().setParameters(1.0f, 0.5f, 1.0f, 0.2f, 2.0f);
 //                 voice.setFilterParameters(100.0f, 6000.0f);
 //                 // Set resonance high enough to generate a sharp peak, keeping below self-oscillation (4.0)
-//                 voice.setFilterResonance(3.5f); 
+//                 voice.setFilterResonance(3.5f);
 //                 break;
 //         }
 
@@ -120,7 +155,7 @@ int main(int argc, char* argv[]) {
 //         // Hold phase: Wait 3.0 seconds for Delay -> Attack -> Hold -> Decay
 //         for (int i = 0; i < 30; ++i) {
 //             if (moveToNext) break;
-//             SDL_Delay(100); 
+//             SDL_Delay(100);
 //         }
 
 //         if (moveToNext) break;
@@ -139,19 +174,19 @@ int main(int argc, char* argv[]) {
 //     }
 
 //     engine.stop();
-//     inputThread.join(); 
+//     inputThread.join();
 // }
 
 // int main(int argc, char* argv[]) {
 //     SDL_SetMainReady();
-    
+
 //     if (SDL_Init(SDL_INIT_AUDIO | SDL_INIT_TIMER) < 0) {
 //         std::cerr << "SDL Initialization failed: " << SDL_GetError() << std::endl;
 //         return 1;
 //     }
 
 //     const float sampleRate = 44100.0f;
-//     const float frequency = 110.0f; 
+//     const float frequency = 110.0f;
 
 //     // Initialize core oscillators
 //     SineOscillator sineWave(sampleRate, frequency);
@@ -172,7 +207,7 @@ int main(int argc, char* argv[]) {
 //         SynthVoice voice(&sineWave);
 //         voice.setSampleRate(sampleRate);
 //         voice.getFilterEnvelope().setParameters(fAtt, fHold, fDec, fSus, fRel);
-        
+
 //         AudioDevice audioEngine;
 //         if (audioEngine.initialize(&voice)) runOscillatorTestSequence(audioEngine, voice, "SINE WAVE");
 //     }
@@ -182,7 +217,7 @@ int main(int argc, char* argv[]) {
 //         SynthVoice voice(&squareWave);
 //         voice.setSampleRate(sampleRate);
 //         voice.getFilterEnvelope().setParameters(fAtt, fHold, fDec, fSus, fRel);
-        
+
 //         AudioDevice audioEngine;
 //         if (audioEngine.initialize(&voice)) runOscillatorTestSequence(audioEngine, voice, "SQUARE WAVE");
 //     }
@@ -192,7 +227,7 @@ int main(int argc, char* argv[]) {
 //         SynthVoice voice(&sawWave);
 //         voice.setSampleRate(sampleRate);
 //         voice.getFilterEnvelope().setParameters(fAtt, fHold, fDec, fSus, fRel);
-        
+
 //         AudioDevice audioEngine;
 //         if (audioEngine.initialize(&voice)) runOscillatorTestSequence(audioEngine, voice, "SAWTOOTH WAVE");
 //     }
@@ -202,7 +237,7 @@ int main(int argc, char* argv[]) {
 //         SynthVoice voice(&triWave);
 //         voice.setSampleRate(sampleRate);
 //         voice.getFilterEnvelope().setParameters(fAtt, fHold, fDec, fSus, fRel);
-        
+
 //         AudioDevice audioEngine;
 //         if (audioEngine.initialize(&voice)) runOscillatorTestSequence(audioEngine, voice, "TRIANGLE WAVE");
 //     }
@@ -212,7 +247,7 @@ int main(int argc, char* argv[]) {
 //         SynthVoice voice(&noiseWave);
 //         voice.setSampleRate(sampleRate);
 //         voice.getFilterEnvelope().setParameters(fAtt, fHold, fDec, fSus, fRel);
-        
+
 //         AudioDevice audioEngine;
 //         if (audioEngine.initialize(&voice)) runOscillatorTestSequence(audioEngine, voice, "NOISE");
 //     }

@@ -29,8 +29,8 @@ Integrate the immediate-mode GUI library to allow rapid interface development.
 
 ### Step 3: The Data Bridge
 Establish the thread-safe connection between the upcoming UI and the existing DSP engine.
-* [ ] **The Shared Matrix:** Create a `struct` containing `std::atomic<float>` variables for all synth parameters (e.g., `filterCutoff`, `ampRelease`).
-* [ ] **Engine Wiring:** Pass a shared pointer (or reference) of this matrix into both the `SynthVoice` (Audio Thread) and the UI layer (Main Thread).
+* [x] **The Shared Matrix:** Create a `struct` containing `std::atomic<float>` variables for all synth parameters (e.g., `filterCutoff`, `ampRelease`).
+* [x] **Engine Wiring:** Pass a shared pointer (or reference) of this matrix into both the `SynthVoice` (Audio Thread) and the UI layer (Main Thread).
 
 ### Step 4: The Synth Dashboard (The View)
 Build our first specific diagnostic view to visualize and control the subtractive synthesis engine.

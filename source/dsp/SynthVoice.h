@@ -1,12 +1,15 @@
 #pragma once
+#include <memory> // For std::shared_ptr
 #include "../core/IAudioSource.h"
+#include "../core/SharedMatrix.h" 
 #include "oscillators/Oscillator.h"
 #include "envelopes/AhdsrEnvelope.h"
 #include "filters/LowPassFilter.h"
 
 class SynthVoice : public IAudioSource {
 public:
-    SynthVoice(Oscillator* osc);
+    // Inject the matrix via the constructor
+    SynthVoice(Oscillator* osc, std::shared_ptr<SharedMatrix> matrix);
 
     void processAudio(float* buffer, int numSamples) override;
 
@@ -28,6 +31,8 @@ public:
     void setOscillator(Oscillator* newOsc);
 
 private:
+    std::shared_ptr<SharedMatrix> matrix; // THE BRIDGE
+
     Oscillator* currentOscillator;
     LowPassFilter filter;         // The actual math block
 
