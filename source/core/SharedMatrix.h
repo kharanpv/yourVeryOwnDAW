@@ -33,4 +33,9 @@ struct SharedMatrix {
     std::atomic<float> filterDecay{ 0.1f };
     std::atomic<float> filterSustain{ 0.5f };
     std::atomic<float> filterRelease{ 0.5f };
+
+    // --- Telemetry / Visualizer Data ---
+    static constexpr int SCOPE_SIZE = 512;
+    std::atomic<float> oscilloscopeBuffer[SCOPE_SIZE];
+    std::atomic<int> scopeWriteIndex{ 0 };
 };

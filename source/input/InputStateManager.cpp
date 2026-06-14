@@ -36,7 +36,10 @@ float InputStateManager::updateContinuous(Uint32 currentTicks) {
     // Use the adjustable base speed
     float delta = baseSpeed * multiplier * dt;
 
-    if (activeKnobDirection == GrooveboxAction::PARAM_DEC) {
+    // Negate the delta if the active action is a "DOWN" movement
+    if (activeKnobDirection == GrooveboxAction::CUTOFF_DOWN ||
+        activeKnobDirection == GrooveboxAction::RES_DOWN ||
+        activeKnobDirection == GrooveboxAction::ATTACK_DOWN) {
         delta = -delta;
     }
 

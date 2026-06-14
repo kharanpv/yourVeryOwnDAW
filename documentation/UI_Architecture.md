@@ -34,12 +34,18 @@ Establish the thread-safe connection between the upcoming UI and the existing DS
 
 ### Step 4: The Synth Dashboard (The View)
 Build our first specific diagnostic view to visualize and control the subtractive synthesis engine.
-* [ ] **The Resizable Container:** Create a single `ImGui::Begin` window, anchored and scaled to the size of the `AppWindow`.
-* [ ] **Parameter Matrix Rendering:** Draw a clean, vertical list of the current DSP parameters by reading them from the `SharedMatrix`.
-* [ ] **Virtual Knob Hookup:** Connect the `InputStateManager` to the ImGui display. Ensure that when a user holds an arrow key, the UI correctly displays the accelerated value changes.
-* [ ] **The Dynamic Keymap Legend:** Render a footer at the bottom of the HUD that polls the `KeymapRouter` to display the active controls (e.g., `[Space] Latch | [A-K] Audition`).
+* [x] **The Monolithic Canvas:** Create a single, borderless `ImGui::Begin` window, anchored and scaled exactly to the size of the OS viewport to emulate a hardware screen.
+* [x] **The Telemetry Matrix:** Draw a clean, vertical list of rigid boxes displaying current DSP parameters by safely reading `std::atomic` values from the `SharedMatrix`.
+* [x] **Inline Keymap Polling:** Dynamically query the `KeymapRouter` (`getKeyName`) inside the UI render loop so each parameter box automatically displays its assigned hardware hotkeys, eliminating the need for a global footer or UI cursors.
+* [x] **Audio Visualizers:** Draw the real-time oscilloscope and dynamically calculated ADSR envelope shape in the telemetry column using `ImGui::PlotLines`.
 
 ### Step 5: The Master Loop Execution
 Tie the standalone modules together in `main.cpp` to boot the full application.
 * [ ] **Boot Sequence:** Initialize SDL, ImGui, the Audio Device, and the Input Router.
 * [ ] **The 60 FPS Loop:** Write the `while(running)` loop that sequentially polls inputs, updates the active Dashboard logic, and commands ImGui to render the frame.
+
+## Step 6: Future UI Modules (The Expansion Pack)
+Because the graphical layer relies purely on passing data through the `SharedMatrix`, we can indefinitely build and swap out new views without touching the core engine.
+* [ ] **The Grid Sequencer View:** A visual timeline for plotting notes and automation.
+* [ ] **The Drum Machine / Sampler View:** An interface to load, slice, and trigger `.wav` files.
+* [ ] **The Master Mixer View:** A central hub showing volume levels, panning, and global effects across all active voices.

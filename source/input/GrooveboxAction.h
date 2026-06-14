@@ -1,24 +1,20 @@
 #pragma once
 
 enum class GrooveboxAction {
-    NONE, // Default state for unmapped keys
+    NONE,
 
-    // --- HUD Navigation ---
-    // Moves the active cursor up and down the Parameter Matrix[cite: 95].
-    NAV_UP,
-    NAV_DOWN,
-
-    // --- Parameter Editing ("Virtual Knob") ---
-    // Modifies whichever parameter the cursor is currently grabbing.
-    PARAM_INC, // Twist right
-    PARAM_DEC, // Twist left
+    // --- Direct Parameter Controls (No Navigation) ---
+    CUTOFF_UP,
+    CUTOFF_DOWN,
+    RES_UP,
+    RES_DOWN,
+    ATTACK_UP,
+    ATTACK_DOWN,
 
     // --- State / Transport ---
-    // Toggles whether note-offs are suppressed[cite: 106].
     TOGGLE_LATCH,
 
     // --- Audition Row (Chromatic Octave) ---
-    // Triggers the synth engine to test frequency response[cite: 104].
     AUDITION_NOTE_0,  // C4
     AUDITION_NOTE_1,  // C#4
     AUDITION_NOTE_2,  // D4
