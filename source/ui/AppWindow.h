@@ -12,9 +12,12 @@ public:
     // Also initializes the Dear ImGui context and theme.
     bool initialize(const std::string& title, int width, int height);
 
-    // Polls the operating system for events (like clicking the 'X' button or resizing).
-    // Now also forwards mouse/keyboard events to ImGui so buttons can be clicked.
-    void processEvents();
+    // Forwards a single OS event (like a mouse click or key press) to the Dear ImGui context.
+    // This allows the UI to track the mouse without trapping the main event loop inside this class.
+    void processImGuiEvent(const SDL_Event* event);
+    
+    // Flags the window's internal state to stop running, initiating a safe engine shutdown.
+    void requestQuit() { running = false; }
 
     // --- Dear ImGui Lifecycle ---
     // Prepares the ImGui engine to accept new UI commands for this frame.

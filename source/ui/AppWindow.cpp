@@ -53,16 +53,10 @@ bool AppWindow::initialize(const std::string& title, int width, int height) {
     return true;
 }
 
-void AppWindow::processEvents() {
-    SDL_Event event;
-    while (SDL_PollEvent(&event)) {
-        // MUST pass the event to ImGui so it knows where the mouse is!
-        ImGui_ImplSDL2_ProcessEvent(&event);
-
-        if (event.type == SDL_QUIT) {
-            running = false; 
-        }
-    }
+// Pass the raw SDL event pointer directly into the ImGui backend.
+// We strictly separate OS window management from UI event handling here.
+void AppWindow::processImGuiEvent(const SDL_Event* event) {
+    ImGui_ImplSDL2_ProcessEvent(event);
 }
 
 // Prepare ImGui for a new frame of logic

@@ -25,10 +25,11 @@ This lives inside the Audio Engine. It is the code that mathematically generates
 - [ ] **Backburner / Future Releases:** Frequency Modulation (FM) synthesis, Pitch Glide (Portamento), and Physical Modeling.
 
 ## 🕹️ 3. The Input / Routing Layer (The Nervous System)
-This handles the controller data and bridges the human to the machine.
-- [ ] **Hardware Polling:** An SDL2 loop that continuously reads the state of inputs (mouse, keyboard, gamepads).
-- [ ] **State Translation:** Converting a raw input action into an actionable event (e.g., "Spacebar Pressed" = "Toggle Playback").
-- [ ] **Routing Matrix:** Sending those events to either the UI (for navigation) or the Sequencer (for playback).
+This handles raw physical inputs, abstracting them into musical actions, and safely writing them to the Audio Thread's memory.
+- [x] Hardware Polling: An SDL2 loop on the Main Thread that cleanly captures OS events (keyboard, mouse, window management).
+- [x] Dynamic Keymap Router: An abstraction layer translating raw physical keys into logical `GrooveboxAction`s (e.g., Arrow Up -> ACTION_PARAM_UP).
+- [x] Virtual Encoders (State Manager): Time-based tracking that converts held keys into exponential floating-point deltas to simulate the "feel" of hardware knobs.
+- [x] The Lock-Free Data Grid (SharedMatrix): A pre-allocated, fixed-size 2D array (Tracks × Parameters) of `std::atomic<float>` variables. The UI thread blindly writes to coordinates, and the Audio thread blindly reads them, completely eliminating memory allocation and thread locks during playback.
 
 ## ⏱️ 4. The Sequencer / Clock (The Heartbeat)
 This keeps the music perfectly in time and tells the DSP Engine what to play and when.

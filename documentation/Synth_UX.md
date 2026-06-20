@@ -20,9 +20,9 @@ Before drawing graphics, we must capture and process raw keyboard data using tim
 ### Phase 2: The UI Canvas & Render Loop
 Before we can test our inputs or visualize audio, we must construct the empty room where the interface will live and establish the application's master infinite loop.
 * **[See UI_Architecture.md for the complete build-out of this layer.](./UI_Architecture.md)**
-* [ ] **SDL2 Window Initialization:** Open a blank, hardware-accelerated desktop window.
-* [ ] **Dear ImGui Context:** Attach the ImGui rendering framework to the SDL window.
-* [ ] **The Master Loop:** Write the 60 FPS `while(running)` loop in `main.cpp` that keeps the application alive, polls for hardware inputs, and pushes pixels to the screen.
+* [x] **SDL2 Window Initialization:** Open a blank, hardware-accelerated desktop window.
+* [x] **Dear ImGui Context:** Attach the ImGui rendering framework to the SDL window.
+* [x] **The Master Loop:** Write the 60 FPS `while(running)` loop in `main.cpp` that keeps the application alive, polls for hardware inputs, and pushes pixels to the screen.
 
 ### Phase 3: The Auditory Feedback Loop (The Wiring)
 With the UI canvas running, we translate our abstracted keyboard inputs into immediate DSP changes without causing thread locks.

@@ -1,14 +1,10 @@
 #include "SynthVoice.h"
 
-// 1. Update Constructor to accept the Matrix
-SynthVoice::SynthVoice(Oscillator* osc, std::shared_ptr<SharedMatrix> sharedMatrix) 
-    : currentOscillator(osc), matrix(sharedMatrix), sampleRate(44100.0f), 
+// 1. Constructor to accept the Matrix
+SynthVoice::SynthVoice(Oscillator* osc, std::shared_ptr<SharedMatrix> sharedMatrix, int trackId) 
+    : currentOscillator(osc), matrix(sharedMatrix), trackId(trackId), sampleRate(44100.0f), 
       filterBaseCutoff(1000.0f), filterEnvDepth(2000.0f), 
-      delaySampleCount(0.0f), currentDelaySample(0.0f), isDelaying(false) {
-          
-    // Notice we removed the hardcoded envelope parameters here!
-    // They will now be dynamically pulled from the Matrix in real-time.
-}
+      delaySampleCount(0.0f), currentDelaySample(0.0f), isDelaying(false) {}
 
 void SynthVoice::setSampleRate(float newSampleRate) {
     sampleRate = newSampleRate;
@@ -37,8 +33,7 @@ void SynthVoice::setOscillator(Oscillator* newOsc) {
 }
 
 void SynthVoice::triggerNote() {
-    // Optionally, read the pre-delay from the matrix here when a note strikes
-    float preDelaySec = matrix->ampPreDelay.load();
+    float preDelaySec = matrix->tracks[trackId].params[P_AMP_PREDELAY].load();
     delaySampleCount = (preDelaySec > 0.0f) ? (preDelaySec * sampleRate) : 0.0f;
 
     if (delaySampleCount > 0.0f) {
@@ -47,17 +42,17 @@ void SynthVoice::triggerNote() {
     } else {
         isDelaying = false;
         ampEnvelope.triggerOn();
-        filterEnvelope.triggerOn(); // Trigger BOTH
+        filterEnvelope.triggerOn(); 
     }
 }
 
 void SynthVoice::releaseNote() {
-    // If the Latch toggle is ON, completely ignore note off requests!
-    if (matrix->isLatched.load()) return;
+    // Read latch mode as a float (> 0.5 is ON)
+    if (matrix->tracks[trackId].params[P_LATCH_MODE].load() > 0.5f) return;
 
     isDelaying = false;
     ampEnvelope.triggerOff();
-    filterEnvelope.triggerOff(); // Release BOTH
+    filterEnvelope.triggerOff(); 
 }
 
 AhdsrEnvelope& SynthVoice::getAmpEnvelope() { return ampEnvelope; }
@@ -74,28 +69,25 @@ void SynthVoice::processAudio(float* buffer, int numSamples) {
     // 2. THE BRIDGE: Poll the Matrix for real-time UI changes!
     // =========================================================
     
-    // Update Amp Envelope
     ampEnvelope.setParameters(
-        matrix->ampAttack.load(), 
-        matrix->ampHold.load(), 
-        matrix->ampDecay.load(), 
-        matrix->ampSustain.load(), 
-        matrix->ampRelease.load()
+        matrix->tracks[trackId].params[P_AMP_ATTACK].load(), 
+        matrix->tracks[trackId].params[P_AMP_HOLD].load(), 
+        matrix->tracks[trackId].params[P_AMP_DECAY].load(), 
+        matrix->tracks[trackId].params[P_AMP_SUSTAIN].load(), 
+        matrix->tracks[trackId].params[P_AMP_RELEASE].load()
     );
 
-    // Update Filter Envelope
     filterEnvelope.setParameters(
-        matrix->filterAttack.load(), 
-        matrix->filterHold.load(), 
-        matrix->filterDecay.load(), 
-        matrix->filterSustain.load(), 
-        matrix->filterRelease.load()
+        matrix->tracks[trackId].params[P_FILTER_ATTACK].load(), 
+        matrix->tracks[trackId].params[P_FILTER_HOLD].load(), 
+        matrix->tracks[trackId].params[P_FILTER_DECAY].load(), 
+        matrix->tracks[trackId].params[P_FILTER_SUSTAIN].load(), 
+        matrix->tracks[trackId].params[P_FILTER_RELEASE].load()
     );
 
-    // Update Filter Core
-    filterBaseCutoff = matrix->filterCutoff.load();
-    filterEnvDepth = matrix->filterEnvAmount.load();
-    filter.setResonance(matrix->filterResonance.load());
+    filterBaseCutoff = matrix->tracks[trackId].params[P_FILTER_CUTOFF].load();
+    filterEnvDepth = matrix->tracks[trackId].params[P_FILTER_ENV_AMT].load();
+    filter.setResonance(matrix->tracks[trackId].params[P_FILTER_RES].load());
 
     // =========================================================
     // 3. PROCESS THE MATH

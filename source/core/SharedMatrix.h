@@ -1,40 +1,66 @@
 #pragma once
-
 #include <atomic>
 
-// This struct is the single source of truth for the Groovebox's current state.
-// The UI Thread WRITES to it. The Audio Thread READS from it.
-struct SharedMatrix {
+// 1. THE PARAMETER DICTIONARY (The Columns)
+enum ParamID {
+    // --- Global/Oscillator ---
+    P_OSC_WAVEFORM = 0,
+    P_LATCH_MODE,
+
+    // --- Amp Envelopes ---
+    P_AMP_PREDELAY,
+    P_AMP_ATTACK,
+    P_AMP_HOLD,
+    P_AMP_DECAY,
+    P_AMP_SUSTAIN,
+    P_AMP_RELEASE,
     
-    // --- Global / Input State ---
-    std::atomic<bool> isLatched{ false };
+    // --- Filter Parameters ---
+    P_FILTER_CUTOFF,
+    P_FILTER_RES,
+    P_FILTER_ENV_AMT,
 
-    // --- Oscillator Parameters ---
-    // e.g., 0 = Sine, 1 = Saw, 2 = Square, 3 = Triangle, 4 = Noise
-    std::atomic<float> oscWaveform{ 1.0f }; 
+    // --- Filter Envelopes ---
+    P_FILTER_PREDELAY,
+    P_FILTER_ATTACK,
+    P_FILTER_HOLD,
+    P_FILTER_DECAY,
+    P_FILTER_SUSTAIN,
+    P_FILTER_RELEASE,
+    
+    // Auto-counts the total size!
+    P_MAX_PARAMS 
+};
 
-    // --- Filter Parameters (Core) ---
-    std::atomic<float> filterCutoff{ 1000.0f }; // Base cutoff in Hz
-    std::atomic<float> filterResonance{ 0.1f }; // Q / Feedback amount
-    std::atomic<float> filterEnvAmount{ 2000.0f }; // How high the envelope pushes the cutoff
+// 2. THE TRACK STATE (The Rows)
+struct TrackState {
+    std::atomic<bool> isActive{ false };
+    std::atomic<int> instrumentType{ 1 }; // 1 = Subtractive Synth
 
-    // --- Amp AHDSR Envelope ---
-    std::atomic<float> ampPreDelay{ 0.0f };
-    std::atomic<float> ampAttack{ 0.01f };
-    std::atomic<float> ampHold{ 0.0f };
-    std::atomic<float> ampDecay{ 0.1f };
-    std::atomic<float> ampSustain{ 0.8f };
-    std::atomic<float> ampRelease{ 0.5f };
+    // The Flat Grid of Parameters
+    std::atomic<float> params[P_MAX_PARAMS]; 
 
-    // --- Filter AHDSR Envelope ---
-    std::atomic<float> filterPreDelay{ 0.0f };
-    std::atomic<float> filterAttack{ 0.01f };
-    std::atomic<float> filterHold{ 0.0f };
-    std::atomic<float> filterDecay{ 0.1f };
-    std::atomic<float> filterSustain{ 0.5f };
-    std::atomic<float> filterRelease{ 0.5f };
+    TrackState() {
+        for (int i = 0; i < P_MAX_PARAMS; ++i) {
+            params[i] = 0.0f;
+        }
+        // Set sensible defaults so the synth makes sound immediately
+        params[P_OSC_WAVEFORM] = 1.0f;     
+        params[P_FILTER_CUTOFF] = 1000.0f;
+        params[P_FILTER_RES] = 0.1f;
+        params[P_FILTER_ENV_AMT] = 2000.0f;
+        params[P_AMP_SUSTAIN] = 0.8f;
+        params[P_AMP_RELEASE] = 0.5f;
+    }
+};
 
-    // --- Telemetry / Visualizer Data ---
+// 3. THE SHARED MATRIX (The Lock-Free Bridge)
+struct SharedMatrix {
+    std::atomic<float> masterVolume{ 0.8f };
+
+    static constexpr int MAX_TRACKS = 64; // Your Absolute Maximum Limit
+    TrackState tracks[MAX_TRACKS];
+
     static constexpr int SCOPE_SIZE = 512;
     std::atomic<float> oscilloscopeBuffer[SCOPE_SIZE];
     std::atomic<int> scopeWriteIndex{ 0 };

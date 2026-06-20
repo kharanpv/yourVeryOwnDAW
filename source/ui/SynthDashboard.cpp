@@ -44,27 +44,24 @@ void SynthDashboard::render() {
         // ==========================================
         ImGui::TableSetColumnIndex(0);
 
-        ImGui::TextColored(ImVec4(0.0f, 1.0f, 0.8f, 1.0f), "SYSTEM // PARAMETERS"); // Cyan header
+        ImGui::TextColored(ImVec4(0.0f, 1.0f, 0.8f, 1.0f), "SYSTEM // PARAMETERS"); 
         ImGui::Separator();
         ImGui::Spacing();
 
-        // Draw the fixed continuous parameters
-        // Note: dspMatrix->filterCutoff.load() is how we safely read from the audio thread!
-        drawContinuousBox("FILTER CUTOFF", dspMatrix->filterCutoff.load(), "Hz",
-                          GrooveboxAction::CUTOFF_UP, GrooveboxAction::CUTOFF_DOWN);
+        drawContinuousBox("FILTER CUTOFF", dspMatrix->tracks[0].params[P_FILTER_CUTOFF].load(), "Hz",
+                            GrooveboxAction::CUTOFF_UP, GrooveboxAction::CUTOFF_DOWN);
 
-        drawContinuousBox("FILTER RES", dspMatrix->filterResonance.load(), "%",
-                          GrooveboxAction::RES_UP, GrooveboxAction::RES_DOWN);
+        drawContinuousBox("FILTER RES", dspMatrix->tracks[0].params[P_FILTER_RES].load(), "%",
+                            GrooveboxAction::RES_UP, GrooveboxAction::RES_DOWN);
         
-        drawContinuousBox("AMP ATTACK", dspMatrix->ampAttack.load(), "sec",
-                          GrooveboxAction::ATTACK_UP, GrooveboxAction::ATTACK_DOWN);
+        drawContinuousBox("AMP ATTACK", dspMatrix->tracks[0].params[P_AMP_ATTACK].load(), "sec",
+                            GrooveboxAction::ATTACK_UP, GrooveboxAction::ATTACK_DOWN);
 
         ImGui::Spacing();
 
-        // Draw Boolean/Toggle parameters
-        drawToggleBox("LATCH MODE", dspMatrix->isLatched.load(),
-                      dspMatrix->isLatched.load() ? "ENGAGED" : "OFF",
-                      GrooveboxAction::TOGGLE_LATCH);
+        // Convert the float parameter back into a boolean for the UI display
+        bool isLatched = dspMatrix->tracks[0].params[P_LATCH_MODE].load() > 0.5f;
+        drawToggleBox("LATCH MODE", isLatched, isLatched ? "ENGAGED" : "OFF", GrooveboxAction::TOGGLE_LATCH);
 
 
         // ==========================================
@@ -100,10 +97,10 @@ void SynthDashboard::render() {
 
         // Dynamically calculate a 100-point graph based on current ADSR values
         float envPlot[100];
-        float a = dspMatrix->ampAttack.load();
-        float d = dspMatrix->ampDecay.load();
-        float s = dspMatrix->ampSustain.load();
-        float r = dspMatrix->ampRelease.load();
+        float a = dspMatrix->tracks[0].params[P_AMP_ATTACK].load();
+        float d = dspMatrix->tracks[0].params[P_AMP_DECAY].load();
+        float s = dspMatrix->tracks[0].params[P_AMP_SUSTAIN].load();
+        float r = dspMatrix->tracks[0].params[P_AMP_RELEASE].load();
         
         // Map the physical seconds to graph proportions (simplified for UI logic)
         float totalTime = a + d + r + 0.1f; // 0.1f is a dummy "Sustain/Hold" time for the graphic

@@ -41,10 +41,20 @@ Build our first specific diagnostic view to visualize and control the subtractiv
 
 ### Step 5: The Master Loop Execution
 Tie the standalone modules together in `main.cpp` to boot the full application.
-* [ ] **Boot Sequence:** Initialize SDL, ImGui, the Audio Device, and the Input Router.
-* [ ] **The 60 FPS Loop:** Write the `while(running)` loop that sequentially polls inputs, updates the active Dashboard logic, and commands ImGui to render the frame.
+* [x] **Boot Sequence:** Initialize SDL, ImGui, the Audio Device, and the Input Router.
+* [x] **The 60 FPS Loop:** Write the `while(running)` loop that sequentially polls inputs, updates the active Dashboard logic, and commands ImGui to render the frame.
 
-## Step 6: Future UI Modules (The Expansion Pack)
+### Step 6: Input Integration & Responsiveness
+Bridge the gap between raw hardware inputs and visual/auditory updates.
+* [ ] **Live Input Wiring:** Connect the `InputStateManager` to the UI logic so that physical keyboard presses actually manipulate the targeted parameters (e.g., virtual knob acceleration logic). 
+* [ ] **Auditory Feedback Loop:** Ensure the parameter updates triggered by key presses correctly overwrite the `SharedMatrix` and audibly manipulate the DSP engine in real-time.
+
+### Step 7: Visual Design Overhaul
+Now that the UI is functional and responsive, replace the basic prototype layout with the final polished aesthetic.
+* [ ] **Design Language:** Settle on a cohesive hardware-style design language (colors, padding, telemetry grouping, and typography).
+* [ ] **Layout Refactoring:** Revise the initial ImGui layout blockiness to implement the new design language, improving readability and the overall user experience.
+
+### Step 8: Future UI Modules (The Expansion Pack)
 Because the graphical layer relies purely on passing data through the `SharedMatrix`, we can indefinitely build and swap out new views without touching the core engine.
 * [ ] **The Grid Sequencer View:** A visual timeline for plotting notes and automation.
 * [ ] **The Drum Machine / Sampler View:** An interface to load, slice, and trigger `.wav` files.

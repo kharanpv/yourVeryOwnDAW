@@ -10,6 +10,8 @@ class SynthVoice : public IAudioSource {
 public:
     // Inject the matrix via the constructor
     SynthVoice(Oscillator* osc, std::shared_ptr<SharedMatrix> matrix);
+    // trackId parameter
+    SynthVoice(Oscillator* osc, std::shared_ptr<SharedMatrix> matrix, int trackId);
 
     void processAudio(float* buffer, int numSamples) override;
 
@@ -32,6 +34,7 @@ public:
 
 private:
     std::shared_ptr<SharedMatrix> matrix; // THE BRIDGE
+    int trackId;
 
     Oscillator* currentOscillator;
     LowPassFilter filter;         // The actual math block

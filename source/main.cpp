@@ -1,6 +1,7 @@
 #include <iostream>
 #include <memory>
-#include <SDL.h> // Required for fetching keyboard state
+#include <algorithm> // for std::max/min
+#include <SDL.h>     
 
 // --- Core & Audio Headers ---
 #include "core/SharedMatrix.h"
@@ -19,85 +20,85 @@
 int main(int argc, char* argv[]) {
     std::cout << "Booting Open Source DAW..." << std::endl;
 
-    // =========================================================
-    // 1. ALLOCATE THE THREAD BRIDGE (The Single Source of Truth)
-    // =========================================================
+    // 1. ALLOCATE THE THREAD BRIDGE (The Spreadsheet)
     auto sharedMatrix = std::make_shared<SharedMatrix>();
 
-    // =========================================================
     // 2. BOOT THE INPUT ENGINE
-    // =========================================================
     auto keyRouter = std::make_shared<KeymapRouter>();
-    
-    // CORRECTED: InputStateManager takes no arguments! 
-    // It is a pure math/state tracker.
     InputStateManager inputManager;
-
-    // (Optional) Tweak your knob feel right here on boot!
     inputManager.setBaseSpeed(0.005f);
     inputManager.setAccelerationCurve(4.0f);
 
-    // =========================================================
     // 3. BOOT THE AUDIO ENGINE
-    // =========================================================
     SawOscillator defaultOsc(44100.0f, 440.0f);
-    SynthVoice myVoice(&defaultOsc, sharedMatrix);
+    
+    // NEW: We pass '0' to assign this voice to Track 0 in the Matrix!
+    SynthVoice myVoice(&defaultOsc, sharedMatrix, 0); 
 
     AudioDevice audioDev;
     if (!audioDev.initialize(&myVoice)) {
         std::cerr << "Failed to open soundcard!" << std::endl;
         return -1;
     }
-    audioDev.start(); // Audio thread is now running in the background!
+    audioDev.start();
 
-    // =========================================================
     // 4. BOOT THE VISUAL ENGINE (UI Canvas)
-    // =========================================================
     AppWindow appWindow;
     if (!appWindow.initialize("Groovebox Diagnostic HUD", 1024, 768)) {
         std::cerr << "Failed to boot UI canvas. Exiting." << std::endl;
         return -1;
     }
 
-    // Instantiate the Dashboard, injecting the data dependencies
     SynthDashboard dashboard(sharedMatrix, keyRouter);
 
     std::cout << "Engine fully booted. Entering main loop." << std::endl;
 
-    // =========================================================
     // 5. THE MASTER LOOP (60 FPS Main Thread)
-    // =========================================================
     while (appWindow.isRunning()) {
 
-        // 1. Drain OS Events
-        appWindow.processEvents();
+        // A. THE ORCHESTRATOR: Route OS Events
+        SDL_Event event;
+        while (SDL_PollEvent(&event)) {
+            
+            // Feed the UI
+            appWindow.processImGuiEvent(&event);
 
-        // 2. CORRECTED: Advance the physics of the Virtual Knob using Time (Ticks)
-        float knobDelta = inputManager.updateContinuous(SDL_GetTicks());
-        
-        if (knobDelta != 0.0f) {
-            // FUTURE WIRING: This is where we will eventually say:
-            // if (activeCursor == CUTOFF) sharedMatrix->filterCutoff += knobDelta;
+            // Handle Window Close
+            if (event.type == SDL_QUIT) {
+                appWindow.requestQuit(); 
+            }
+
+            // Feed the Input State Manager
+            if (event.type == SDL_KEYDOWN || event.type == SDL_KEYUP) {
+                if (event.key.repeat == 0) {
+                    bool isDown = (event.type == SDL_KEYDOWN);
+                    GrooveboxAction action = keyRouter->getAction(event.key.keysym.sym);
+                    inputManager.processEvent(action, isDown);
+                }
+            }
         }
 
-        // 3. Start the immediate-mode UI frame
+        // B. Update Virtual Knobs
+        float knobDelta = inputManager.updateContinuous(SDL_GetTicks());
+        if (knobDelta != 0.0f) {
+            // Test the knob wiring safely on the Master Volume!
+            float currentVol = sharedMatrix->masterVolume.load();
+            float newVol = std::max(0.0f, std::min(1.0f, currentVol + knobDelta));
+            sharedMatrix->masterVolume.store(newVol);
+        }
+
+        // C. Render UI
         appWindow.beginUiFrame();
-
-        // 4. Render our Synth Dashboard
         dashboard.render();
-
-        // 5. Wipe the screen & push ImGui to the physical monitor
         appWindow.clear();
         appWindow.drawUi();
         appWindow.present();
     }
 
-    // =========================================================
     // 6. CLEAN SHUTDOWN
-    // =========================================================
     std::cout << "Shutting down engine safely." << std::endl;
-    audioDev.stop(); // Safely kill audio thread first to prevent mid-buffer pops
-    appWindow.shutdown(); // Then kill graphics and SDL
+    audioDev.stop(); 
+    appWindow.shutdown(); 
 
     return 0;
 }
