@@ -17,7 +17,7 @@ This lives inside the Audio Engine. It is the code that mathematically generates
 - [x] **Amplitude & Delay Shaping (AHDSR):** A volume curve (Attack, Hold, Decay, Sustain, Release) plus a Pre-Delay timer so continuous tones have a precise, dynamic start and end.
 - [x] **Subtractive Synthesis - Pure 4-Pole Filter & Envelope:** A digital 4-pole low-pass filter cascade, modulated by its own independent AHDSR envelope to smoothly curve the wave's sharp digital jumps over time.
 - [x] **Filter Resonance (Feedback Loop):** Implementing a mathematical feedback path from the 4th filter stage back to the input to amplify the cutoff frequency and add analog "squelch/whistle."
-- [ ] **Synth Parameter UX (The Debug/Test Environment):** Establishing a robust interactive graphical interface (Dear ImGui) mapped to hardware inputs. This provides a real-time testing ground to dial in envelopes and filters before writing more complex DSP.
+- [x] **Synth Parameter UX (The Debug/Test Environment):** Establishing a robust interactive graphical interface (Dear ImGui) mapped to hardware inputs. This provides a real-time testing ground to dial in envelopes and filters before writing more complex DSP.
   [See Synth_UX.md for the complete build-out of this layer.](./Synth_UX.md)
 - [ ] **Low Frequency Oscillators (LFO):** Reusing core oscillator math at sub-audio rates (0.1Hz - 20Hz) to continuously modulate pitch, volume, or filter cutoff for evolving, moving sounds.
 - [ ] **Sampling Engine:** Memory allocation and bit-parsing to load `.wav` files into RAM for polyphonic drum playback and pitch manipulation.
@@ -29,7 +29,9 @@ This handles raw physical inputs, abstracting them into musical actions, and saf
 - [x] Hardware Polling: An SDL2 loop on the Main Thread that cleanly captures OS events (keyboard, mouse, window management).
 - [x] Dynamic Keymap Router: An abstraction layer translating raw physical keys into logical `GrooveboxAction`s (e.g., Arrow Up -> ACTION_PARAM_UP).
 - [x] Virtual Encoders (State Manager): Time-based tracking that converts held keys into exponential floating-point deltas to simulate the "feel" of hardware knobs.
-- [x] The Lock-Free Data Grid (SharedMatrix): A pre-allocated, fixed-size 2D array (Tracks × Parameters) of `std::atomic<float>` variables. The UI thread blindly writes to coordinates, and the Audio thread blindly reads them, completely eliminating memory allocation and thread locks during playback.
+- [x] The Lock-Free Data Grid (SharedMatrix): A pre-allocated, fixed-size 2D array (Tracks × Parameters) of `std::atomic<float>` variables. The main loop writes parameter changes here; the Audio thread reads them. The UI thread also reads (never writes) these atomics to display current state — completely eliminating memory allocation and thread locks during playback.
+
+> **Note:** Keybindings are user-reprogrammable via `config.json` at startup. A more inventive live reprogram system is planned for a future phase.
 
 ## ⏱️ 4. The Sequencer / Clock (The Heartbeat)
 This keeps the music perfectly in time and tells the DSP Engine what to play and when.
@@ -48,7 +50,7 @@ The graphical overlay drawn using Dear ImGui. It runs on the main thread and sim
 ## 🔄 How the Components Interact (Data Flow)
 
 1. **Input:** The user presses an input control. The **Input Layer** detects this.
-2. **Logic Update:** The Input Layer tells the **Sequencer** to activate Step 5 in the array.
+2. **Logic Update:** The Input Layer tells the **main loop**, which writes the change to the `SharedMatrix` atomics (e.g., updating a live synth parameter). For sequencer actions the main loop also tells the **Sequencer** to activate Step 5 in the array.
 3. **Audio Generation:** The **Audio Engine**'s callback fires. It checks the Sequencer, sees Step 5 is active, and tells the **DSP Engine** to generate a note.
 4. **Output:** The Audio Engine sends that generated sound directly to the soundcard.
 5. **Visual Feedback:** The **UI Thread** wakes up, checks the Sequencer's state, and draws a visual highlight on Step 5 on the screen.

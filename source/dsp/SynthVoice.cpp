@@ -1,4 +1,5 @@
 #include "SynthVoice.h"
+#include <cmath>
 
 // 1. Constructor to accept the Matrix
 SynthVoice::SynthVoice(Oscillator* osc, std::shared_ptr<SharedMatrix> sharedMatrix, int trackId) 
@@ -58,6 +59,12 @@ void SynthVoice::releaseNote() {
 AhdsrEnvelope& SynthVoice::getAmpEnvelope() { return ampEnvelope; }
 AhdsrEnvelope& SynthVoice::getFilterEnvelope() { return filterEnvelope; }
 
+void SynthVoice::playNote(int midiNote) {
+    float freq = 440.0f * std::pow(2.0f, (midiNote - 69) / 12.0f);
+    currentOscillator->setFrequency(freq);
+    triggerNote();
+}
+
 void SynthVoice::processAudio(float* buffer, int numSamples) {
     // Safety check: ensure both oscillator and matrix exist
     if (currentOscillator == nullptr || matrix == nullptr) {
@@ -93,6 +100,8 @@ void SynthVoice::processAudio(float* buffer, int numSamples) {
     // 3. PROCESS THE MATH
     // =========================================================
 
+    const float volume = matrix->masterVolume.load(std::memory_order_relaxed);
+
     // Generate Raw Oscillator Buzz
     currentOscillator->processAudio(buffer, numSamples);
 
@@ -122,7 +131,7 @@ void SynthVoice::processAudio(float* buffer, int numSamples) {
         float ampMultiplier = ampEnvelope.process();
 
         // D. Final Output (Filtered Sound * Volume Level)
-        buffer[i] = filteredSample * ampMultiplier;       
-        buffer[i + 1] = filteredSample * ampMultiplier;   
+        buffer[i] = filteredSample * ampMultiplier * volume;
+        buffer[i + 1] = filteredSample * ampMultiplier * volume;
     }
 }

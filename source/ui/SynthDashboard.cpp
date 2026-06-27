@@ -53,7 +53,7 @@ void SynthDashboard::render() {
 
         drawContinuousBox("FILTER RES", dspMatrix->tracks[0].params[P_FILTER_RES].load(), "%",
                             GrooveboxAction::RES_UP, GrooveboxAction::RES_DOWN);
-        
+
         drawContinuousBox("AMP ATTACK", dspMatrix->tracks[0].params[P_AMP_ATTACK].load(), "sec",
                             GrooveboxAction::ATTACK_UP, GrooveboxAction::ATTACK_DOWN);
 
@@ -140,21 +140,18 @@ void SynthDashboard::render() {
 void SynthDashboard::drawContinuousBox(const char* label, float value, const char* unit,
                                        GrooveboxAction actionUp, GrooveboxAction actionDown) {
 
-    // Query the router for the physical keys (e.g., returns "W" and "S")
-    std::string keyUp = keyRouter->getKeyName(actionUp);
+    std::string keyUp   = keyRouter->getKeyName(actionUp);
     std::string keyDown = keyRouter->getKeyName(actionDown);
 
-    // Draw a blocky child window for the parameter
     ImGui::BeginChild(label, ImVec2(-1, 55), true, ImGuiWindowFlags_NoScrollbar);
 
-    // Top Row: Label on the left, physical keys on the right
+    // Top row: label left, key hint right
     ImGui::Text("%s", label);
-    ImGui::SameLine(ImGui::GetWindowWidth() - 80); // Align to the far right
+    ImGui::SameLine(ImGui::GetWindowWidth() - 80);
     ImGui::TextColored(ImVec4(0.5f, 0.5f, 0.5f, 1.0f), "[%s]/[%s]", keyUp.c_str(), keyDown.c_str());
 
-    // Bottom Row: The actual numerical value
-    // We use a bright Amber/Phosphor color for the data
-    ImGui::TextColored(ImVec4(1.0f, 0.7f, 0.0f, 1.0f), "> %.2f %s", value, unit);
+    // Bottom row: dim cursor glyph + value — no active highlighting
+    ImGui::TextColored(ImVec4(0.35f, 0.35f, 0.35f, 1.0f), "> %.2f %s", value, unit);
 
     ImGui::EndChild();
 }

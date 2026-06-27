@@ -8,15 +8,15 @@
 
 class SynthVoice : public IAudioSource {
 public:
-    // Inject the matrix via the constructor
-    SynthVoice(Oscillator* osc, std::shared_ptr<SharedMatrix> matrix);
-    // trackId parameter
     SynthVoice(Oscillator* osc, std::shared_ptr<SharedMatrix> matrix, int trackId);
 
     void processAudio(float* buffer, int numSamples) override;
 
     void triggerNote();
     void releaseNote();
+    // Tunes the oscillator to the given MIDI note number, then fires a note-on.
+    // midiNote: standard MIDI note number (e.g. 60 = C4, 69 = A4)
+    void playNote(int midiNote);
     void setSampleRate(float newSampleRate);
     void setDelay(float delaySec);
 

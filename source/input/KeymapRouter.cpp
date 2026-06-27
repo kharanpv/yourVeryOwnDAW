@@ -21,19 +21,21 @@ void KeymapRouter::loadLayerOneMapping() {
     // 2. State/Latch
     activeKeymap[SDLK_SPACE] = GrooveboxAction::TOGGLE_LATCH;
 
-    // 3. Audition Row (Q through ] mapping to C4 through B4)
-    activeKeymap[SDLK_q]            = GrooveboxAction::AUDITION_NOTE_0;
-    activeKeymap[SDLK_w]            = GrooveboxAction::AUDITION_NOTE_1;
-    activeKeymap[SDLK_e]            = GrooveboxAction::AUDITION_NOTE_2;
-    activeKeymap[SDLK_r]            = GrooveboxAction::AUDITION_NOTE_3;
-    activeKeymap[SDLK_t]            = GrooveboxAction::AUDITION_NOTE_4;
-    activeKeymap[SDLK_y]            = GrooveboxAction::AUDITION_NOTE_5;
-    activeKeymap[SDLK_u]            = GrooveboxAction::AUDITION_NOTE_6;
-    activeKeymap[SDLK_i]            = GrooveboxAction::AUDITION_NOTE_7;
-    activeKeymap[SDLK_o]            = GrooveboxAction::AUDITION_NOTE_8;
-    activeKeymap[SDLK_p]            = GrooveboxAction::AUDITION_NOTE_9;
-    activeKeymap[SDLK_LEFTBRACKET]  = GrooveboxAction::AUDITION_NOTE_10; 
-    activeKeymap[SDLK_RIGHTBRACKET] = GrooveboxAction::AUDITION_NOTE_11; 
+    // 3. Audition Row — 12-key chromatic octave mapped across the QWERTY top row + brackets
+    //    Q=C4(60)  W=C#4(61) E=D4(62)  R=D#4(63) T=E4(64)  Y=F4(65)
+    //    U=F#4(66) I=G4(67)  O=G#4(68) P=A4(69)  [=A#4(70) ]=B4(71)
+    activeKeymap[SDLK_q]            = GrooveboxAction::AUDITION_NOTE_0;  // C4  (MIDI 60)
+    activeKeymap[SDLK_w]            = GrooveboxAction::AUDITION_NOTE_1;  // C#4 (MIDI 61)
+    activeKeymap[SDLK_e]            = GrooveboxAction::AUDITION_NOTE_2;  // D4  (MIDI 62)
+    activeKeymap[SDLK_r]            = GrooveboxAction::AUDITION_NOTE_3;  // D#4 (MIDI 63)
+    activeKeymap[SDLK_t]            = GrooveboxAction::AUDITION_NOTE_4;  // E4  (MIDI 64)
+    activeKeymap[SDLK_y]            = GrooveboxAction::AUDITION_NOTE_5;  // F4  (MIDI 65)
+    activeKeymap[SDLK_u]            = GrooveboxAction::AUDITION_NOTE_6;  // F#4 (MIDI 66)
+    activeKeymap[SDLK_i]            = GrooveboxAction::AUDITION_NOTE_7;  // G4  (MIDI 67)
+    activeKeymap[SDLK_o]            = GrooveboxAction::AUDITION_NOTE_8;  // G#4 (MIDI 68)
+    activeKeymap[SDLK_p]            = GrooveboxAction::AUDITION_NOTE_9;  // A4  (MIDI 69)
+    activeKeymap[SDLK_LEFTBRACKET]  = GrooveboxAction::AUDITION_NOTE_10; // A#4 (MIDI 70)
+    activeKeymap[SDLK_RIGHTBRACKET] = GrooveboxAction::AUDITION_NOTE_11; // B4  (MIDI 71)
 }
 
 GrooveboxAction KeymapRouter::getAction(SDL_Keycode key) const {

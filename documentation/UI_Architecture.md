@@ -8,8 +8,8 @@ To ensure the UI can scale beyond just a synthesizer (e.g., adding a drum machin
 
 1. **The Application Window (`AppWindow`):** A generic wrapper around SDL2. It handles OS-level window management, DPI scaling, and the master rendering context. It knows nothing about music or DSP.
 2. **The Render Context (Dear ImGui):** Attached to the `AppWindow`, ImGui handles the immediate-mode drawing of text, shapes, and layouts.
-3. **The Thread Bridge (`SharedMatrix`):** A lock-free, `std::atomic` data structure. The UI thread writes parameter changes here; the audio thread reads from it. This prevents audio dropouts.
-4. **The Views (`SynthDashboard`):** Specific UI classes that are called during the render loop. They read user input, update the `SharedMatrix`, and tell ImGui what to draw.
+3. **The Thread Bridge (`SharedMatrix`):** A lock-free, `std::atomic` data structure. The main loop writes parameter changes here; the audio thread reads from it. This prevents audio dropouts.
+4. **The Views (`SynthDashboard`):** Specific UI classes that are called during the render loop. They **read** the `SharedMatrix` atomics and tell ImGui what to draw — they never receive or process input directly.
 
 ---
 
@@ -46,15 +46,23 @@ Tie the standalone modules together in `main.cpp` to boot the full application.
 
 ### Step 6: Input Integration & Responsiveness
 Bridge the gap between raw hardware inputs and visual/auditory updates.
-* [ ] **Live Input Wiring:** Connect the `InputStateManager` to the UI logic so that physical keyboard presses actually manipulate the targeted parameters (e.g., virtual knob acceleration logic). 
-* [ ] **Auditory Feedback Loop:** Ensure the parameter updates triggered by key presses correctly overwrite the `SharedMatrix` and audibly manipulate the DSP engine in real-time.
+* [x] **Live Input Wiring:** Physical keyboard presses are captured by the `InputStateManager`, which feeds the **main loop**. The main loop applies virtual knob acceleration logic and writes the resulting parameter values to the `SharedMatrix`. The UI only reads those atomics — it is never in the input path.
+* [x] **Auditory Feedback Loop:** Parameter values written to the `SharedMatrix` by the main loop are immediately read by the audio thread, audibly manipulating the DSP engine in real-time. The UI reflects the same atomic values as passive confirmation.
+* [x] **Immediate Tap Response:** Knob keys (A/Z, S/X, D/C) produce a one-shot delta on key-down — no 250ms dead zone. Tap gives immediate, perceptible parameter movement.
+* [x] **Linear Acceleration Curve:** Replaced the quadratic `time² * 4.0` ramp with a linear growth curve (`baseSpeed * (1 + holdSeconds * accelCurve)`) for smooth, predictable hold-to-fly behavior.
 
-### Step 7: Visual Design Overhaul
+### Step 7: Audition Key Visualization
+Now that the engine is proven responsive, make the 12-note audition keyboard visible in the UI so the user can see which keys map to which notes without alt-tabbing to a reference.
+* [ ] **Keyboard Overlay Widget:** Draw a 1- or 2-row QWERTY piano layout in the right Telemetry column, highlighting the keys Q–P and [ ] and labelling them with their MIDI note names (C4–B4).
+* [ ] **Active-Note Indicator:** Light up the pressed key on the overlay when a note is sounding.
+* [ ] **Latch State Indicator:** If latch is engaged, show a persistent sustain indicator on the overlay so the user can see which note is being held.
+
+### Step 8: Visual Design Overhaul
 Now that the UI is functional and responsive, replace the basic prototype layout with the final polished aesthetic.
 * [ ] **Design Language:** Settle on a cohesive hardware-style design language (colors, padding, telemetry grouping, and typography).
 * [ ] **Layout Refactoring:** Revise the initial ImGui layout blockiness to implement the new design language, improving readability and the overall user experience.
 
-### Step 8: Future UI Modules (The Expansion Pack)
+### Step 9: Future UI Modules (The Expansion Pack)
 Because the graphical layer relies purely on passing data through the `SharedMatrix`, we can indefinitely build and swap out new views without touching the core engine.
 * [ ] **The Grid Sequencer View:** A visual timeline for plotting notes and automation.
 * [ ] **The Drum Machine / Sampler View:** An interface to load, slice, and trigger `.wav` files.

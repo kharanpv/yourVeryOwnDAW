@@ -1,11 +1,10 @@
 #include <iostream>
 #include <memory>
-#include <algorithm> // for std::max/min
-#include <SDL.h>     
+#include <SDL.h>
 
 // --- Core & Audio Headers ---
 #include "core/SharedMatrix.h"
-#include "core/AudioDevice.h" 
+#include "core/AudioDevice.h"
 #include "dsp/SynthVoice.h"
 #include "dsp/oscillators/SawOscillator.h"
 
@@ -17,10 +16,40 @@
 #include "ui/AppWindow.h"
 #include "ui/SynthDashboard.h"
 
+// ---------------------------------------------------------------
+// Per-parameter ranges: defines how each knob delta is applied.
+// The raw delta from InputStateManager is a normalized float; we
+// scale it by `range` and clamp the result to [min, max].
+// ---------------------------------------------------------------
+struct ParamRange {
+    ParamID id;
+    float   min;
+    float   max;
+    float   range; // Multiply raw delta by this to get Hz/seconds/etc.
+};
+
+// Each knob action maps to one entry in this table.
+// Order must match the GrooveboxAction -> ParamID routing below.
+static const ParamRange PARAM_RANGES[] = {
+    { P_FILTER_CUTOFF, 20.0f,   20000.0f, 300.0f  }, // Hz — sweeps fast
+    { P_FILTER_RES,    0.0f,    1.0f,     1.0f    }, // 0–1 normalized
+    { P_AMP_ATTACK,    0.0f,    10.0f,    1.0f    }, // seconds
+};
+
+// Clamp helper
+static float clampf(float v, float lo, float hi) {
+    return v < lo ? lo : (v > hi ? hi : v);
+}
+
+// MIDI note index (0–11) → MIDI note number (C4=60 through B4=71)
+static const int AUDITION_MIDI_NOTES[12] = {
+    60, 61, 62, 63, 64, 65, 66, 67, 68, 69, 70, 71
+};
+
 int main(int argc, char* argv[]) {
     std::cout << "Booting Open Source DAW..." << std::endl;
 
-    // 1. ALLOCATE THE THREAD BRIDGE (The Spreadsheet)
+    // 1. ALLOCATE THE THREAD BRIDGE
     auto sharedMatrix = std::make_shared<SharedMatrix>();
 
     // 2. BOOT THE INPUT ENGINE
@@ -31,9 +60,7 @@ int main(int argc, char* argv[]) {
 
     // 3. BOOT THE AUDIO ENGINE
     SawOscillator defaultOsc(44100.0f, 440.0f);
-    
-    // NEW: We pass '0' to assign this voice to Track 0 in the Matrix!
-    SynthVoice myVoice(&defaultOsc, sharedMatrix, 0); 
+    SynthVoice myVoice(&defaultOsc, sharedMatrix, 0);
 
     AudioDevice audioDev;
     if (!audioDev.initialize(&myVoice)) {
@@ -42,7 +69,7 @@ int main(int argc, char* argv[]) {
     }
     audioDev.start();
 
-    // 4. BOOT THE VISUAL ENGINE (UI Canvas)
+    // 4. BOOT THE VISUAL ENGINE
     AppWindow appWindow;
     if (!appWindow.initialize("Groovebox Diagnostic HUD", 1024, 768)) {
         std::cerr << "Failed to boot UI canvas. Exiting." << std::endl;
@@ -56,20 +83,20 @@ int main(int argc, char* argv[]) {
     // 5. THE MASTER LOOP (60 FPS Main Thread)
     while (appWindow.isRunning()) {
 
-        // A. THE ORCHESTRATOR: Route OS Events
+        // -------------------------------------------------------
+        // A. POLL OS EVENTS
+        // -------------------------------------------------------
         SDL_Event event;
         while (SDL_PollEvent(&event)) {
-            
-            // Feed the UI
+
             appWindow.processImGuiEvent(&event);
 
-            // Handle Window Close
             if (event.type == SDL_QUIT) {
-                appWindow.requestQuit(); 
+                appWindow.requestQuit();
             }
 
-            // Feed the Input State Manager
             if (event.type == SDL_KEYDOWN || event.type == SDL_KEYUP) {
+                // Ignore key-repeat events — only process true down/up edges.
                 if (event.key.repeat == 0) {
                     bool isDown = (event.type == SDL_KEYDOWN);
                     GrooveboxAction action = keyRouter->getAction(event.key.keysym.sym);
@@ -78,16 +105,49 @@ int main(int argc, char* argv[]) {
             }
         }
 
-        // B. Update Virtual Knobs
-        float knobDelta = inputManager.updateContinuous(SDL_GetTicks());
-        if (knobDelta != 0.0f) {
-            // Test the knob wiring safely on the Master Volume!
-            float currentVol = sharedMatrix->masterVolume.load();
-            float newVol = std::max(0.0f, std::min(1.0f, currentVol + knobDelta));
-            sharedMatrix->masterVolume.store(newVol);
+        // -------------------------------------------------------
+        // B. DRAIN EDGE EVENTS (latch toggle, audition notes)
+        //    These are one-shot events fired on key-down/up edges.
+        // -------------------------------------------------------
+
+        // Latch toggle — write the new boolean into the matrix
+        if (inputManager.consumeLatchToggle()) {
+            bool latched = inputManager.getIsLatched();
+            sharedMatrix->tracks[0].params[P_LATCH_MODE].store(latched ? 1.0f : 0.0f);
         }
 
-        // C. Render UI
+        // Note-on edge — tune oscillator to MIDI note and trigger envelope
+        int noteOn = inputManager.consumeNoteOn();
+        if (noteOn >= 0 && noteOn < 12) {
+            myVoice.playNote(AUDITION_MIDI_NOTES[noteOn]);
+        }
+
+        // Note-off edge — release envelope (latch suppression is inside SynthVoice)
+        int noteOff = inputManager.consumeNoteOff();
+        if (noteOff >= 0 && noteOff < 12) {
+            myVoice.releaseNote();
+        }
+
+        // -------------------------------------------------------
+        // C. VIRTUAL KNOB — apply continuous delta to the targeted
+        //    parameter and write it atomically to the matrix.
+        // -------------------------------------------------------
+        float rawDelta = inputManager.updateContinuous(SDL_GetTicks());
+        if (rawDelta != 0.0f) {
+            int paramIdx = inputManager.getActiveParamIndex();
+            if (paramIdx >= 0) {
+                const ParamRange& pr = PARAM_RANGES[paramIdx];
+                float current = sharedMatrix->tracks[0].params[pr.id].load();
+                float next = clampf(current + rawDelta * pr.range, pr.min, pr.max);
+                sharedMatrix->tracks[0].params[pr.id].store(next);
+            }
+        }
+
+        // -------------------------------------------------------
+        // D. RENDER UI
+        // The dashboard is a pure HUD — it only reads SharedMatrix,
+        // never writes. All control flow is in this main loop only.
+        // -------------------------------------------------------
         appWindow.beginUiFrame();
         dashboard.render();
         appWindow.clear();
@@ -97,8 +157,8 @@ int main(int argc, char* argv[]) {
 
     // 6. CLEAN SHUTDOWN
     std::cout << "Shutting down engine safely." << std::endl;
-    audioDev.stop(); 
-    appWindow.shutdown(); 
+    audioDev.stop();
+    appWindow.shutdown();
 
     return 0;
 }

@@ -20,8 +20,9 @@ private:
     // --- High-Resolution Terminal Aesthetic Helpers ---
     void setupTerminalTheme();
 
-    // Draws a rigid box for continuous values (e.g., Cutoff, Attack)
-    void drawContinuousBox(const char* label, float value, const char* unit, 
+    // Draws a rigid box for continuous values (e.g., Cutoff, Attack).
+    // No active-highlighting — every box looks the same regardless of last-touched.
+    void drawContinuousBox(const char* label, float value, const char* unit,
                            GrooveboxAction actionUp, GrooveboxAction actionDown);
 
     // Draws a rigid box for booleans (e.g., Latch, Oscillator Type)
