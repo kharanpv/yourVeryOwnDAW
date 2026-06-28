@@ -20,6 +20,10 @@ public:
     // held knob action (0=cutoff, 1=res, 2=attack), or -1 if no knob is held.
     int  getActiveParamIndex() const;
 
+    // Waveform selection — consume the pending waveform change.
+    // Returns 0-4 for the 5 waveform types, or -1 if no change is pending.
+    int  consumeWaveformChange();
+
     void setHoldThreshold(Uint32 thresholdMs);
     void setBaseSpeed(float speed);
     void setTapStep(float step);
@@ -44,4 +48,5 @@ private:
     bool pendingLatchToggle;
     int  pendingNoteOn;   // -1 if none pending
     int  pendingNoteOff;  // -1 if none pending
+    int  pendingWaveformChange; // -1 if none pending
 };

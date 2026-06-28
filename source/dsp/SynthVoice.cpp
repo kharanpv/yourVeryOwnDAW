@@ -105,6 +105,9 @@ void SynthVoice::processAudio(float* buffer, int numSamples) {
     // Generate Raw Oscillator Buzz
     currentOscillator->processAudio(buffer, numSamples);
 
+    // Reset scope write index so each audio callback writes a fresh frame
+    matrix->scopeWriteIndex.store(0, std::memory_order_relaxed);
+
     for (int i = 0; i < numSamples; i += 2) {
         
         // Handle Pre-Delay
@@ -133,5 +136,16 @@ void SynthVoice::processAudio(float* buffer, int numSamples) {
         // D. Final Output (Filtered Sound * Volume Level)
         buffer[i] = filteredSample * ampMultiplier * volume;
         buffer[i + 1] = filteredSample * ampMultiplier * volume;
+
+        // =========================================================
+        // 4. WRITE TO THE OSCILLOSCOPE BUFFER
+        //    The filtered sample (post-filter) shows how cutoff/res
+        //    affect the waveform visually.
+        // =========================================================
+        int scopeIdx = matrix->scopeWriteIndex.load(std::memory_order_relaxed);
+        if (scopeIdx < SharedMatrix::SCOPE_SIZE) {
+            matrix->oscilloscopeBuffer[scopeIdx].store(buffer[i], std::memory_order_relaxed);
+            matrix->scopeWriteIndex.store(scopeIdx + 1, std::memory_order_relaxed);
+        }
     }
 }

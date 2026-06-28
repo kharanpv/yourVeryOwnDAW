@@ -28,5 +28,12 @@ enum class GrooveboxAction {
     AUDITION_NOTE_8,  // O  -> G#4 (MIDI 68)
     AUDITION_NOTE_9,  // P  -> A4  (MIDI 69)
     AUDITION_NOTE_10, // [  -> A#4 (MIDI 70)
-    AUDITION_NOTE_11  // ]  -> B4  (MIDI 71)
+    AUDITION_NOTE_11,  // ]  -> B4  (MIDI 71)
+
+    // --- Waveform Selection: number keys 1-5 ---
+    WAVEFORM_SINE,
+    WAVEFORM_SAW,
+    WAVEFORM_SQUARE,
+    WAVEFORM_TRIANGLE,
+    WAVEFORM_NOISE
 };

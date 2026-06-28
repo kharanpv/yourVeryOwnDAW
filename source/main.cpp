@@ -6,7 +6,11 @@
 #include "core/SharedMatrix.h"
 #include "core/AudioDevice.h"
 #include "dsp/SynthVoice.h"
+#include "dsp/oscillators/SineOscillator.h"
 #include "dsp/oscillators/SawOscillator.h"
+#include "dsp/oscillators/SquareOscillator.h"
+#include "dsp/oscillators/TriangleOscillator.h"
+#include "dsp/oscillators/NoiseGenerator.h"
 
 // --- Input Headers ---
 #include "input/KeymapRouter.h"
@@ -58,9 +62,18 @@ int main(int argc, char* argv[]) {
     inputManager.setBaseSpeed(0.005f);
     inputManager.setAccelerationCurve(4.0f);
 
-    // 3. BOOT THE AUDIO ENGINE
-    SawOscillator defaultOsc(44100.0f, 440.0f);
-    SynthVoice myVoice(&defaultOsc, sharedMatrix, 0);
+    // 3. BOOT THE AUDIO ENGINE — create all 5 waveforms
+    SineOscillator     sineOsc(44100.0f, 440.0f);
+    SawOscillator      sawOsc(44100.0f, 440.0f);
+    SquareOscillator   squareOsc(44100.0f, 440.0f);
+    TriangleOscillator triOsc(44100.0f, 440.0f);
+    NoiseGenerator     noiseOsc(0.1f);
+
+    // Start with the waveform already stored in the matrix (default = Saw, index 1)
+    Oscillator* oscillators[5] = { &sineOsc, &sawOsc, &squareOsc, &triOsc, &noiseOsc };
+    int currentWaveIdx = (int)sharedMatrix->tracks[0].params[P_OSC_WAVEFORM].load();
+    if (currentWaveIdx < 0 || currentWaveIdx > 4) currentWaveIdx = 1;
+    SynthVoice myVoice(oscillators[currentWaveIdx], sharedMatrix, 0);
 
     AudioDevice audioDev;
     if (!audioDev.initialize(&myVoice)) {
@@ -126,6 +139,13 @@ int main(int argc, char* argv[]) {
         int noteOff = inputManager.consumeNoteOff();
         if (noteOff >= 0 && noteOff < 12) {
             myVoice.releaseNote();
+        }
+
+        // Waveform switching — consume edge events and update oscillator + matrix
+        int waveAction = inputManager.consumeWaveformChange();
+        if (waveAction >= 0 && waveAction <= 4) {
+            sharedMatrix->tracks[0].params[P_OSC_WAVEFORM].store((float)waveAction);
+            myVoice.setOscillator(oscillators[waveAction]);
         }
 
         // -------------------------------------------------------

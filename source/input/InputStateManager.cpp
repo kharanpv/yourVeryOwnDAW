@@ -12,7 +12,8 @@ InputStateManager::InputStateManager()
       pendingOneShotKnobChange(false),
       pendingLatchToggle(false),
       pendingNoteOn(-1),
-      pendingNoteOff(-1) {}
+      pendingNoteOff(-1),
+      pendingWaveformChange(-1) {}
 
 // --- Private helper ---
 
@@ -46,6 +47,15 @@ void InputStateManager::processEvent(GrooveboxAction action, bool isDown) {
             pendingNoteOn = noteIndex;
         } else {
             pendingNoteOff = noteIndex;
+        }
+        return;
+    }
+
+    if (action >= GrooveboxAction::WAVEFORM_SINE &&
+        action <= GrooveboxAction::WAVEFORM_NOISE) {
+        if (isDown) {
+            pendingWaveformChange = static_cast<int>(action) -
+                                    static_cast<int>(GrooveboxAction::WAVEFORM_SINE);
         }
         return;
     }
@@ -124,6 +134,12 @@ int InputStateManager::consumeNoteOff() {
     int note = pendingNoteOff;
     pendingNoteOff = -1;
     return note;
+}
+
+int InputStateManager::consumeWaveformChange() {
+    int w = pendingWaveformChange;
+    pendingWaveformChange = -1;
+    return w;
 }
 
 // --- Getters / setters ---

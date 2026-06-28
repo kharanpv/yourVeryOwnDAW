@@ -21,7 +21,14 @@ void KeymapRouter::loadLayerOneMapping() {
     // 2. State/Latch
     activeKeymap[SDLK_SPACE] = GrooveboxAction::TOGGLE_LATCH;
 
-    // 3. Audition Row — 12-key chromatic octave mapped across the QWERTY top row + brackets
+    // 3. Waveform Selection — number keys 1-5
+    activeKeymap[SDLK_1] = GrooveboxAction::WAVEFORM_SINE;
+    activeKeymap[SDLK_2] = GrooveboxAction::WAVEFORM_SAW;
+    activeKeymap[SDLK_3] = GrooveboxAction::WAVEFORM_SQUARE;
+    activeKeymap[SDLK_4] = GrooveboxAction::WAVEFORM_TRIANGLE;
+    activeKeymap[SDLK_5] = GrooveboxAction::WAVEFORM_NOISE;
+
+    // 4. Audition Row — 12-key chromatic octave mapped across the QWERTY top row + brackets
     //    Q=C4(60)  W=C#4(61) E=D4(62)  R=D#4(63) T=E4(64)  Y=F4(65)
     //    U=F#4(66) I=G4(67)  O=G#4(68) P=A4(69)  [=A#4(70) ]=B4(71)
     activeKeymap[SDLK_q]            = GrooveboxAction::AUDITION_NOTE_0;  // C4  (MIDI 60)
