@@ -32,8 +32,9 @@ private:
     // Draws a read-only waveform indicator (no clickable buttons — keyboard only)
     void drawWaveformSelector(int currentWave);
 
-    // Generates a preview waveform, filtered through the same 4-pole cascade
-    // as the audio engine, so cutoff and resonance changes are visible.
+    // Generates a single-cycle preview waveform (one period of the oscillator),
+    // filtered through the same 4-pole cascade as the audio engine, so cutoff
+    // and resonance changes are reflected visually.
     void generateWaveformPreview(float* outBuffer, int numSamples, int waveType,
                                   float cutoffHz, float resonance, float sampleRate);
 };

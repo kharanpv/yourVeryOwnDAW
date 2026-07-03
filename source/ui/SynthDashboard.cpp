@@ -44,7 +44,8 @@ void SynthDashboard::render() {
 
         // Lock the left column to exactly 33% of the screen width
         ImGui::TableSetupColumn("Parameters", ImGuiTableColumnFlags_WidthStretch, 0.33f);
-        ImGui::TableSetupColumn("Telemetry", ImGuiTableColumnFlags_WidthStretch, 0.67f);
+        // Right column is ~90% of its original width, giving the left more room
+        ImGui::TableSetupColumn("Telemetry", ImGuiTableColumnFlags_WidthStretch, 0.603f);
 
         ImGui::TableNextRow();
 
@@ -62,8 +63,6 @@ void SynthDashboard::render() {
         if (currentWave < 0 || currentWave > 4) currentWave = 1;
         drawWaveformSelector(currentWave);
 
-        ImGui::Spacing();
-
         drawContinuousBox("FILTER CUTOFF", dspMatrix->tracks[0].params[P_FILTER_CUTOFF].load(), "Hz",
                             GrooveboxAction::CUTOFF_UP, GrooveboxAction::CUTOFF_DOWN);
 
@@ -72,8 +71,6 @@ void SynthDashboard::render() {
 
         drawContinuousBox("AMP ATTACK", dspMatrix->tracks[0].params[P_AMP_ATTACK].load(), "sec",
                             GrooveboxAction::ATTACK_UP, GrooveboxAction::ATTACK_DOWN);
-
-        ImGui::Spacing();
 
         // Convert the float parameter back into a boolean for the UI display
         bool isLatched = dspMatrix->tracks[0].params[P_LATCH_MODE].load() > 0.5f;
@@ -89,61 +86,26 @@ void SynthDashboard::render() {
         ImGui::Separator();
         ImGui::Spacing();
 
-        // --- 1. The Live Oscilloscope ---
-        ImGui::BeginChild("Oscilloscope", ImVec2(-1, 300), true);
-        ImGui::TextColored(ImVec4(0.5f, 0.5f, 0.5f, 1.0f), "LIVE WAVEFORM (post-filter)");
-        
-        // Safely extract the atomic data into a local array for ImGui to draw
-        float localScope[SharedMatrix::SCOPE_SIZE];
-        int scopeCount = dspMatrix->scopeWriteIndex.load(std::memory_order_relaxed);
-        if (scopeCount > SharedMatrix::SCOPE_SIZE) scopeCount = SharedMatrix::SCOPE_SIZE;
-        
-        for (int i = 0; i < scopeCount; ++i) {
-            localScope[i] = dspMatrix->oscilloscopeBuffer[i].load(std::memory_order_relaxed);
-        }
-        // Fill trailing samples with 0 if we haven't filled the buffer yet
-        for (int i = scopeCount; i < SharedMatrix::SCOPE_SIZE; ++i) {
-            localScope[i] = 0.0f;
-        }
-        
-        // Draw the neon wave (Cyan)
-        ImGui::PushStyleColor(ImGuiCol_PlotLines, ImVec4(0.0f, 1.0f, 0.8f, 1.0f));
-        if (scopeCount > 0) {
-            ImGui::PlotLines("##Scope", localScope, SharedMatrix::SCOPE_SIZE, 0, nullptr, -1.0f, 1.0f, ImVec2(-1, 225));
-        } else {
-            // No data yet — show the static preview instead
+        // --- 1. Single-cycle waveform preview (oscillator + filter) ---
+        ImGui::BeginChild("WaveformPreview", ImVec2(-1, 328), true,
+                          ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoInputs);
+        ImGui::TextColored(ImVec4(0.5f, 0.5f, 0.5f, 1.0f), "WAVEFORM (post-filter)");
+
+        {
             float previewBuf[256];
             float cutoff = dspMatrix->tracks[0].params[P_FILTER_CUTOFF].load();
             float res    = dspMatrix->tracks[0].params[P_FILTER_RES].load();
             generateWaveformPreview(previewBuf, 256, currentWave, cutoff, res, 44100.0f);
-            ImGui::PushStyleColor(ImGuiCol_PlotLines, ImVec4(0.3f, 0.3f, 0.3f, 1.0f));
-            ImGui::PlotLines("##Preview", previewBuf, 256, 0, nullptr, -1.0f, 1.0f, ImVec2(-1, 225));
+
+            ImGui::PushStyleColor(ImGuiCol_PlotLines, ImVec4(0.2f, 0.8f, 1.0f, 1.0f));
+            ImGui::PlotLines("##Preview", previewBuf, 256, 0, nullptr, -1.0f, 1.0f, ImVec2(-1, 278));
             ImGui::PopStyleColor();
         }
-        ImGui::PopStyleColor();
         ImGui::EndChild();
 
-        ImGui::Spacing();
-
-            // --- 1b. Static Waveform Preview (shows the unfiltered wave shape)
-            //     This is always visible and changes with the selected waveform + filter params
-            ImGui::BeginChild("WaveformPreview", ImVec2(-1, 200), true);
-            ImGui::TextColored(ImVec4(0.5f, 0.5f, 0.5f, 1.0f), "WAVEFORM PREVIEW");
-
-            float previewBuf[256];
-            float cutoff = dspMatrix->tracks[0].params[P_FILTER_CUTOFF].load();
-            float res    = dspMatrix->tracks[0].params[P_FILTER_RES].load();
-            generateWaveformPreview(previewBuf, 256, currentWave, cutoff, res, 44100.0f);
-
-            ImGui::PushStyleColor(ImGuiCol_PlotLines, ImVec4(0.2f, 0.8f, 1.0f, 1.0f)); // Light blue
-            ImGui::PlotLines("##Preview", previewBuf, 256, 0, nullptr, -1.0f, 1.0f, ImVec2(-1, 135));
-            ImGui::PopStyleColor();
-            ImGui::EndChild();
-
-            ImGui::Spacing();
-
-            // --- 2. The Envelope Graph (Amp ADSR) ---
-        ImGui::BeginChild("EnvelopeGraph", ImVec2(-1, 225), true);
+        // --- 2. The Envelope Graph (Amp ADSR) ---
+        ImGui::BeginChild("EnvelopeGraph", ImVec2(-1, 252), true,
+                          ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoInputs);
         ImGui::TextColored(ImVec4(0.5f, 0.5f, 0.5f, 1.0f), "AMP ENVELOPE SHAPE");
 
         // Dynamically calculate a 100-point graph based on current ADSR values
@@ -152,7 +114,7 @@ void SynthDashboard::render() {
         float d = dspMatrix->tracks[0].params[P_AMP_DECAY].load();
         float s = dspMatrix->tracks[0].params[P_AMP_SUSTAIN].load();
         float r = dspMatrix->tracks[0].params[P_AMP_RELEASE].load();
-        
+
         // Map the physical seconds to graph proportions (simplified for UI logic)
         float totalTime = a + d + r + 0.1f; // 0.1f is a dummy "Sustain/Hold" time for the graphic
         int attackSamples = (int)((a / totalTime) * 100);
@@ -175,9 +137,9 @@ void SynthDashboard::render() {
 
         // Draw the neon envelope (Amber)
         ImGui::PushStyleColor(ImGuiCol_PlotLines, ImVec4(1.0f, 0.7f, 0.0f, 1.0f));
-        ImGui::PlotLines("##ADSR", envPlot, 100, 0, nullptr, 0.0f, 1.1f, ImVec2(-1, 150));
+        ImGui::PlotLines("##ADSR", envPlot, 100, 0, nullptr, 0.0f, 1.1f, ImVec2(-1, 202));
         ImGui::PopStyleColor();
-        
+
         ImGui::EndChild();
 
         ImGui::EndTable();
@@ -195,7 +157,7 @@ void SynthDashboard::drawContinuousBox(const char* label, float value, const cha
     std::string keyDown = keyRouter->getKeyName(actionDown);
     std::string keyHint = std::string("[") + keyUp + "]/[" + keyDown + "]";
 
-    ImGui::BeginChild(label, ImVec2(-1, 83), true, ImGuiWindowFlags_NoScrollbar);
+    ImGui::BeginChild(label, ImVec2(-1, 83), true, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoInputs);
 
         // Top row: label left, key hint right-anchored
         float hintWidth = ImGui::CalcTextSize(keyHint.c_str()).x;
@@ -220,7 +182,7 @@ void SynthDashboard::drawContinuousBox(const char* label, float value, const cha
         ImGui::PushStyleColor(ImGuiCol_ChildBg, ImVec4(0.2f, 0.2f, 0.2f, 1.0f));
     }
 
-    ImGui::BeginChild(label, ImVec2(-1, 83), true, ImGuiWindowFlags_NoScrollbar);
+    ImGui::BeginChild(label, ImVec2(-1, 83), true, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoInputs);
 
     // Top row: label left, key hint right-anchored (same method as continuous boxes)
     float hintWidth = ImGui::CalcTextSize(keyHint.c_str()).x;
@@ -246,7 +208,7 @@ void SynthDashboard::drawWaveformSelector(int currentWave) {
     const ImVec4 dim(0.5f, 0.5f, 0.5f, 1.0f);
     const ImVec4 keyDim(0.35f, 0.35f, 0.35f, 1.0f);
 
-    ImGui::BeginChild("WaveSelect", ImVec2(-1, 10 + 5 * 44), true, ImGuiWindowFlags_NoScrollbar);
+    ImGui::BeginChild("WaveSelect", ImVec2(-1, 10 + 5 * 42), true, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoInputs);
     ImGui::Text("%s", "WAVEFORM");
 
     for (int i = 0; i < 5; ++i) {
@@ -271,11 +233,10 @@ void SynthDashboard::drawWaveformSelector(int currentWave) {
 void SynthDashboard::generateWaveformPreview(float* outBuffer, int numSamples,
                                               int waveType, float cutoffHz,
                                               float resonance, float sampleRate) {
-    // Generate multiple cycles of the raw waveform, then pass it through the
+    // Generate a single cycle of the raw waveform, then pass it through the
     // same 4-pole cascaded low-pass filter that the audio engine uses.
-    // Showing multiple cycles makes the waveform shape immediately recognizable.
 
-    const float numCycles = 8.0f;
+    const float numCycles = 1.0f;
 
     // --- Step 1: generate the raw waveform ---
     for (int i = 0; i < numSamples; ++i) {
