@@ -90,7 +90,7 @@ void SynthDashboard::render() {
         ImGui::Spacing();
 
         // --- 1. The Live Oscilloscope ---
-        ImGui::BeginChild("Oscilloscope", ImVec2(-1, 200), true);
+        ImGui::BeginChild("Oscilloscope", ImVec2(-1, 300), true);
         ImGui::TextColored(ImVec4(0.5f, 0.5f, 0.5f, 1.0f), "LIVE WAVEFORM (post-filter)");
         
         // Safely extract the atomic data into a local array for ImGui to draw
@@ -109,7 +109,7 @@ void SynthDashboard::render() {
         // Draw the neon wave (Cyan)
         ImGui::PushStyleColor(ImGuiCol_PlotLines, ImVec4(0.0f, 1.0f, 0.8f, 1.0f));
         if (scopeCount > 0) {
-            ImGui::PlotLines("##Scope", localScope, SharedMatrix::SCOPE_SIZE, 0, nullptr, -1.0f, 1.0f, ImVec2(-1, 150));
+            ImGui::PlotLines("##Scope", localScope, SharedMatrix::SCOPE_SIZE, 0, nullptr, -1.0f, 1.0f, ImVec2(-1, 225));
         } else {
             // No data yet — show the static preview instead
             float previewBuf[256];
@@ -117,7 +117,7 @@ void SynthDashboard::render() {
             float res    = dspMatrix->tracks[0].params[P_FILTER_RES].load();
             generateWaveformPreview(previewBuf, 256, currentWave, cutoff, res, 44100.0f);
             ImGui::PushStyleColor(ImGuiCol_PlotLines, ImVec4(0.3f, 0.3f, 0.3f, 1.0f));
-            ImGui::PlotLines("##Preview", previewBuf, 256, 0, nullptr, -1.0f, 1.0f, ImVec2(-1, 150));
+            ImGui::PlotLines("##Preview", previewBuf, 256, 0, nullptr, -1.0f, 1.0f, ImVec2(-1, 225));
             ImGui::PopStyleColor();
         }
         ImGui::PopStyleColor();
@@ -127,7 +127,7 @@ void SynthDashboard::render() {
 
             // --- 1b. Static Waveform Preview (shows the unfiltered wave shape)
             //     This is always visible and changes with the selected waveform + filter params
-            ImGui::BeginChild("WaveformPreview", ImVec2(-1, 130), true);
+            ImGui::BeginChild("WaveformPreview", ImVec2(-1, 200), true);
             ImGui::TextColored(ImVec4(0.5f, 0.5f, 0.5f, 1.0f), "WAVEFORM PREVIEW");
 
             float previewBuf[256];
@@ -136,14 +136,14 @@ void SynthDashboard::render() {
             generateWaveformPreview(previewBuf, 256, currentWave, cutoff, res, 44100.0f);
 
             ImGui::PushStyleColor(ImGuiCol_PlotLines, ImVec4(0.2f, 0.8f, 1.0f, 1.0f)); // Light blue
-            ImGui::PlotLines("##Preview", previewBuf, 256, 0, nullptr, -1.0f, 1.0f, ImVec2(-1, 90));
+            ImGui::PlotLines("##Preview", previewBuf, 256, 0, nullptr, -1.0f, 1.0f, ImVec2(-1, 135));
             ImGui::PopStyleColor();
             ImGui::EndChild();
 
             ImGui::Spacing();
 
             // --- 2. The Envelope Graph (Amp ADSR) ---
-        ImGui::BeginChild("EnvelopeGraph", ImVec2(-1, 150), true);
+        ImGui::BeginChild("EnvelopeGraph", ImVec2(-1, 225), true);
         ImGui::TextColored(ImVec4(0.5f, 0.5f, 0.5f, 1.0f), "AMP ENVELOPE SHAPE");
 
         // Dynamically calculate a 100-point graph based on current ADSR values
@@ -175,7 +175,7 @@ void SynthDashboard::render() {
 
         // Draw the neon envelope (Amber)
         ImGui::PushStyleColor(ImGuiCol_PlotLines, ImVec4(1.0f, 0.7f, 0.0f, 1.0f));
-        ImGui::PlotLines("##ADSR", envPlot, 100, 0, nullptr, 0.0f, 1.1f, ImVec2(-1, 100));
+        ImGui::PlotLines("##ADSR", envPlot, 100, 0, nullptr, 0.0f, 1.1f, ImVec2(-1, 150));
         ImGui::PopStyleColor();
         
         ImGui::EndChild();
@@ -195,21 +195,21 @@ void SynthDashboard::drawContinuousBox(const char* label, float value, const cha
     std::string keyDown = keyRouter->getKeyName(actionDown);
     std::string keyHint = std::string("[") + keyUp + "]/[" + keyDown + "]";
 
-    ImGui::BeginChild(label, ImVec2(-1, 55), true, ImGuiWindowFlags_NoScrollbar);
+    ImGui::BeginChild(label, ImVec2(-1, 83), true, ImGuiWindowFlags_NoScrollbar);
 
-    // Top row: label left, key hint right-anchored
-    float hintWidth = ImGui::CalcTextSize(keyHint.c_str()).x;
-    ImGui::Text("%s", label);
-    ImGui::SameLine(ImGui::GetWindowWidth() - hintWidth - ImGui::GetStyle().WindowPadding.x);
-    ImGui::TextColored(ImVec4(0.35f, 0.35f, 0.35f, 1.0f), "%s", keyHint.c_str());
+        // Top row: label left, key hint right-anchored
+        float hintWidth = ImGui::CalcTextSize(keyHint.c_str()).x;
+        ImGui::Text("%s", label);
+        ImGui::SameLine(ImGui::GetWindowWidth() - hintWidth - ImGui::GetStyle().WindowPadding.x);
+        ImGui::TextColored(ImVec4(0.35f, 0.35f, 0.35f, 1.0f), "%s", keyHint.c_str());
 
-    // Bottom row: dim cursor glyph + value — no active highlighting
-    ImGui::TextColored(ImVec4(0.5f, 0.5f, 0.5f, 1.0f), "> %.2f %s", value, unit);
+        // Bottom row: dim cursor glyph + value — no active highlighting
+        ImGui::TextColored(ImVec4(0.5f, 0.5f, 0.5f, 1.0f), "> %.2f %s", value, unit);
 
-    ImGui::EndChild();
-}
+        ImGui::EndChild();
+    }
 
-void SynthDashboard::drawToggleBox(const char* label, bool isActive, const std::string& stateStr,
+    void SynthDashboard::drawToggleBox(const char* label, bool isActive, const std::string& stateStr,
                                    GrooveboxAction toggleAction) {
 
     std::string key = keyRouter->getKeyName(toggleAction);
@@ -220,7 +220,7 @@ void SynthDashboard::drawToggleBox(const char* label, bool isActive, const std::
         ImGui::PushStyleColor(ImGuiCol_ChildBg, ImVec4(0.2f, 0.2f, 0.2f, 1.0f));
     }
 
-    ImGui::BeginChild(label, ImVec2(-1, 55), true, ImGuiWindowFlags_NoScrollbar);
+    ImGui::BeginChild(label, ImVec2(-1, 83), true, ImGuiWindowFlags_NoScrollbar);
 
     // Top row: label left, key hint right-anchored (same method as continuous boxes)
     float hintWidth = ImGui::CalcTextSize(keyHint.c_str()).x;
@@ -246,7 +246,7 @@ void SynthDashboard::drawWaveformSelector(int currentWave) {
     const ImVec4 dim(0.5f, 0.5f, 0.5f, 1.0f);
     const ImVec4 keyDim(0.35f, 0.35f, 0.35f, 1.0f);
 
-    ImGui::BeginChild("WaveSelect", ImVec2(-1, 10 + 5 * 22), true, ImGuiWindowFlags_NoScrollbar);
+    ImGui::BeginChild("WaveSelect", ImVec2(-1, 10 + 5 * 44), true, ImGuiWindowFlags_NoScrollbar);
     ImGui::Text("%s", "WAVEFORM");
 
     for (int i = 0; i < 5; ++i) {

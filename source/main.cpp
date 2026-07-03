@@ -84,7 +84,7 @@ int main(int argc, char* argv[]) {
 
     // 4. BOOT THE VISUAL ENGINE
     AppWindow appWindow;
-    if (!appWindow.initialize("Groovebox Diagnostic HUD", 1024, 768)) {
+    if (!appWindow.initialize("Groovebox Diagnostic HUD", 960, 840)) {
         std::cerr << "Failed to boot UI canvas. Exiting." << std::endl;
         return -1;
     }

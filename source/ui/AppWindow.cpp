@@ -6,6 +6,10 @@
 #include "imgui_impl_sdl2.h"
 #include "imgui_impl_sdlrenderer2.h"
 
+#ifdef _WIN32
+#include <windows.h>
+#endif
+
 AppWindow::AppWindow() : window(nullptr), renderer(nullptr), running(false) {}
 
 AppWindow::~AppWindow() {
@@ -17,6 +21,13 @@ bool AppWindow::initialize(const std::string& title, int width, int height) {
         std::cerr << "Failed to initialize SDL Video: " << SDL_GetError() << std::endl;
         return false;
     }
+
+#ifdef _WIN32
+    // Tell Windows we handle DPI scaling ourselves. Without this, Windows
+    // DPI-virtualizes the app (treating the 2560x1600 display as 1280x800)
+    // and scales the window up by 2x, doubling our requested size.
+    SetProcessDPIAware();
+#endif
 
     window = SDL_CreateWindow(
         title.c_str(),
@@ -40,10 +51,17 @@ bool AppWindow::initialize(const std::string& title, int width, int height) {
     // --- BOOT SEQUENCE: Initialize Dear ImGui ---
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
-    ImGuiIO& io = ImGui::GetIO(); 
-    io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard; // Allow keyboard navigation
+    ImGuiIO& io = ImGui::GetIO();
+    io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
 
-    ImGui::StyleColorsDark(); // Hardware Synth aesthetic
+    // On high-DPI displays (where we called SetProcessDPIAware), the logical
+    // pixel grid is 1:1 with physical pixels, so ImGui renders everything at
+    // 1x by default. Scale fonts and style up 2x so the UI is readable and
+    // proportionally matches the pre-DPI-awareness appearance.
+    io.FontGlobalScale = 2.0f;
+
+    ImGui::StyleColorsDark();
+    ImGui::GetStyle().ScaleAllSizes(2.0f);
 
     // Connect ImGui to our SDL Window and Renderer
     ImGui_ImplSDL2_InitForSDLRenderer(window, renderer);
