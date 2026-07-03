@@ -64,4 +64,9 @@ struct SharedMatrix {
     static constexpr int SCOPE_SIZE = 512;
     std::atomic<float> oscilloscopeBuffer[SCOPE_SIZE];
     std::atomic<int> scopeWriteIndex{ 0 };
+
+    // Frequency tracking for the waveform preview oscilloscope.
+    // Updated by the main loop when a note is played; read by the dashboard.
+    // Falls back to 220.0f (A3) as the default when no note has been played.
+    std::atomic<float> previewFreq{ 220.0f };
 };

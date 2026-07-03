@@ -1,37 +1,49 @@
 #include "SynthDashboard.h"
+
+#include "elements/ScopeCanvas.h"
+#include "elements/ParamBox.h"
+#include "elements/ToggleBox.h"
+#include "elements/WaveformSelector.h"
+#include "elements/WaveformGenerator.h"
+#include "elements/EnvelopeGenerator.h"
+#include "elements/TerminalStyle.h"
+
 #include <cmath>
-#include <cstdlib> // for rand()
 
-#ifndef M_PI
-#define M_PI 3.14159265358979323846
-#endif
+// Number of samples in the decimated (display) buffer for 50ms at 44.1kHz
+static const int WAVEFORM_DISPLAY_SAMPLES = 2205; // 44100 / 20
 
-SynthDashboard::SynthDashboard(std::shared_ptr<SharedMatrix> matrix, std::shared_ptr<KeymapRouter> router)
-    : dspMatrix(matrix), keyRouter(router) {
+SynthDashboard::SynthDashboard(std::shared_ptr<SharedMatrix> matrix,
+                                 std::shared_ptr<KeymapRouter> router)
+    : dspMatrix(matrix), keyRouter(router),
+      paramBox(std::make_unique<ParamBox>()),
+      toggleBox(std::make_unique<ToggleBox>()),
+      waveformSelector(std::make_unique<WaveformSelector>()),
+      scopeCanvas(std::make_unique<ScopeCanvas>()),
+      waveGen(std::make_unique<WaveformGenerator>()),
+      envGen(std::make_unique<EnvelopeGenerator>()) {
     setupTerminalTheme();
 }
 
+SynthDashboard::~SynthDashboard() = default;
+
 void SynthDashboard::setupTerminalTheme() {
-    // 80s/90s High-Res Terminal Aesthetic
     ImGuiStyle& style = ImGui::GetStyle();
-    style.WindowRounding = 0.0f;       // Sharp, blocky corners
+    style.WindowRounding = 0.0f;
     style.ChildRounding = 0.0f;
     style.FrameRounding = 0.0f;
-    style.Colors[ImGuiCol_WindowBg] = ImVec4(0.05f, 0.05f, 0.05f, 1.00f); // Void Black
-    style.Colors[ImGuiCol_Border]   = ImVec4(0.30f, 0.30f, 0.30f, 1.00f); // Dark Grey borders
-    style.Colors[ImGuiCol_Text]     = ImVec4(0.90f, 0.90f, 0.90f, 1.00f); // Crisp White
-
-    // Uniform 8px padding on all sides of child windows
-    style.WindowPadding = ImVec2(8.0f, 8.0f);
+    style.Colors[ImGuiCol_WindowBg] = TerminalStyle::childBg();
+    style.Colors[ImGuiCol_Border]   = ImVec4(0.30f, 0.30f, 0.30f, 1.00f);
+    style.Colors[ImGuiCol_Text]     = TerminalStyle::textWhite();
+    style.WindowPadding = ImVec2(TerminalStyle::windowPadding(),
+                                  TerminalStyle::windowPadding());
 }
 
 void SynthDashboard::render() {
-    // 1. Create a monolithic, unmovable HUD covering the entire OS window
     ImGuiViewport* viewport = ImGui::GetMainViewport();
     ImGui::SetNextWindowPos(viewport->Pos);
     ImGui::SetNextWindowSize(viewport->Size);
 
-    // Strip away all OS-level window decorations
     ImGuiWindowFlags flags = ImGuiWindowFlags_NoDecoration |
                              ImGuiWindowFlags_NoMove |
                              ImGuiWindowFlags_NoSavedSettings |
@@ -39,108 +51,19 @@ void SynthDashboard::render() {
 
     ImGui::Begin("Terminal_HUD", nullptr, flags);
 
-    // 2. Define the Layout (1/3 Left Column, 2/3 Right Column)
     if (ImGui::BeginTable("HudLayout", 2, ImGuiTableFlags_BordersInnerV)) {
-
-        // Lock the left column to exactly 33% of the screen width
         ImGui::TableSetupColumn("Parameters", ImGuiTableColumnFlags_WidthStretch, 0.33f);
-        // Right column is ~90% of its original width, giving the left more room
-        ImGui::TableSetupColumn("Telemetry", ImGuiTableColumnFlags_WidthStretch, 0.603f);
-
+        ImGui::TableSetupColumn("Telemetry",  ImGuiTableColumnFlags_WidthStretch, 0.603f);
         ImGui::TableNextRow();
 
-        // ==========================================
-        // LEFT COLUMN: THE PARAMETER BOXES
-        // ==========================================
-        ImGui::TableSetColumnIndex(0);
-
-        ImGui::TextColored(ImVec4(0.0f, 1.0f, 0.8f, 1.0f), "SYSTEM // PARAMETERS"); 
-        ImGui::Separator();
-        ImGui::Spacing();
-
-        // --- Waveform Selector (read-only display, keyboard-only control) ---
         int currentWave = (int)dspMatrix->tracks[0].params[P_OSC_WAVEFORM].load();
         if (currentWave < 0 || currentWave > 4) currentWave = 1;
-        drawWaveformSelector(currentWave);
 
-        drawContinuousBox("FILTER CUTOFF", dspMatrix->tracks[0].params[P_FILTER_CUTOFF].load(), "Hz",
-                            GrooveboxAction::CUTOFF_UP, GrooveboxAction::CUTOFF_DOWN);
+        ImGui::TableSetColumnIndex(0);
+        drawLeftColumn(currentWave);
 
-        drawContinuousBox("FILTER RES", dspMatrix->tracks[0].params[P_FILTER_RES].load(), "%",
-                            GrooveboxAction::RES_UP, GrooveboxAction::RES_DOWN);
-
-        drawContinuousBox("AMP ATTACK", dspMatrix->tracks[0].params[P_AMP_ATTACK].load(), "sec",
-                            GrooveboxAction::ATTACK_UP, GrooveboxAction::ATTACK_DOWN);
-
-        // Convert the float parameter back into a boolean for the UI display
-        bool isLatched = dspMatrix->tracks[0].params[P_LATCH_MODE].load() > 0.5f;
-        drawToggleBox("LATCH MODE", isLatched, isLatched ? "ENGAGED" : "OFF", GrooveboxAction::TOGGLE_LATCH);
-
-
-        // ==========================================
-        // RIGHT COLUMN: TELEMETRY & VISUALIZERS
-        // ==========================================
         ImGui::TableSetColumnIndex(1);
-        
-        ImGui::TextColored(ImVec4(0.0f, 1.0f, 0.8f, 1.0f), "TELEMETRY // SIGNAL");
-        ImGui::Separator();
-        ImGui::Spacing();
-
-        // --- 1. Single-cycle waveform preview (oscillator + filter) ---
-        ImGui::BeginChild("WaveformPreview", ImVec2(-1, 328), true,
-                          ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoInputs);
-        ImGui::TextColored(ImVec4(0.5f, 0.5f, 0.5f, 1.0f), "WAVEFORM (post-filter)");
-
-        {
-            float previewBuf[256];
-            float cutoff = dspMatrix->tracks[0].params[P_FILTER_CUTOFF].load();
-            float res    = dspMatrix->tracks[0].params[P_FILTER_RES].load();
-            generateWaveformPreview(previewBuf, 256, currentWave, cutoff, res, 44100.0f);
-
-            ImGui::PushStyleColor(ImGuiCol_PlotLines, ImVec4(0.2f, 0.8f, 1.0f, 1.0f));
-            ImGui::PlotLines("##Preview", previewBuf, 256, 0, nullptr, -1.0f, 1.0f, ImVec2(-1, 278));
-            ImGui::PopStyleColor();
-        }
-        ImGui::EndChild();
-
-        // --- 2. The Envelope Graph (Amp ADSR) ---
-        ImGui::BeginChild("EnvelopeGraph", ImVec2(-1, 252), true,
-                          ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoInputs);
-        ImGui::TextColored(ImVec4(0.5f, 0.5f, 0.5f, 1.0f), "AMP ENVELOPE SHAPE");
-
-        // Dynamically calculate a 100-point graph based on current ADSR values
-        float envPlot[100];
-        float a = dspMatrix->tracks[0].params[P_AMP_ATTACK].load();
-        float d = dspMatrix->tracks[0].params[P_AMP_DECAY].load();
-        float s = dspMatrix->tracks[0].params[P_AMP_SUSTAIN].load();
-        float r = dspMatrix->tracks[0].params[P_AMP_RELEASE].load();
-
-        // Map the physical seconds to graph proportions (simplified for UI logic)
-        float totalTime = a + d + r + 0.1f; // 0.1f is a dummy "Sustain/Hold" time for the graphic
-        int attackSamples = (int)((a / totalTime) * 100);
-        int decaySamples  = (int)((d / totalTime) * 100);
-        int holdSamples   = (int)((0.1f / totalTime) * 100);
-        int releaseSamples = 100 - (attackSamples + decaySamples + holdSamples);
-
-        int idx = 0;
-        // Attack slope
-        for (int i = 0; i < attackSamples && idx < 100; ++i) envPlot[idx++] = (float)i / attackSamples;
-        // Decay slope
-        for (int i = 0; i < decaySamples && idx < 100; ++i)  envPlot[idx++] = 1.0f - ((1.0f - s) * ((float)i / decaySamples));
-        // Sustain plateau
-        for (int i = 0; i < holdSamples && idx < 100; ++i)   envPlot[idx++] = s;
-        // Release slope
-        for (int i = 0; i < releaseSamples && idx < 100; ++i) envPlot[idx++] = s * (1.0f - ((float)i / releaseSamples));
-
-        // Fill any rounding remainders
-        while(idx < 100) envPlot[idx++] = 0.0f;
-
-        // Draw the neon envelope (Amber)
-        ImGui::PushStyleColor(ImGuiCol_PlotLines, ImVec4(1.0f, 0.7f, 0.0f, 1.0f));
-        ImGui::PlotLines("##ADSR", envPlot, 100, 0, nullptr, 0.0f, 1.1f, ImVec2(-1, 202));
-        ImGui::PopStyleColor();
-
-        ImGui::EndChild();
+        drawRightColumn(currentWave);
 
         ImGui::EndTable();
     }
@@ -148,146 +71,141 @@ void SynthDashboard::render() {
     ImGui::End();
 }
 
-// --- Custom Widget Drawing Functions ---
+// ── LEFT COLUMN ────────────────────────────────────────────────────────────
+void SynthDashboard::drawLeftColumn(int currentWave) {
+    ImGui::TextColored(TerminalStyle::accent(), "SYSTEM // PARAMETERS");
+    ImGui::Separator();
+    ImGui::Spacing();
 
-void SynthDashboard::drawContinuousBox(const char* label, float value, const char* unit,
-                                       GrooveboxAction actionUp, GrooveboxAction actionDown) {
+    // Waveform selector
+    const char* keyHints[5] = { "1", "2", "3", "4", "5" };
+    waveformSelector->draw(currentWave, keyHints);
 
-    std::string keyUp   = keyRouter->getKeyName(actionUp);
-    std::string keyDown = keyRouter->getKeyName(actionDown);
-    std::string keyHint = std::string("[") + keyUp + "]/[" + keyDown + "]";
+    // OSC FREQ (read-only)
+    float previewFreq = dspMatrix->previewFreq.load();
+    std::string oscKey = keyRouter->getKeyName(GrooveboxAction::CUTOFF_UP);
+    std::string oscHint = "[" + oscKey + "]";
+    paramBox->draw("OSC FREQ", previewFreq, "Hz", oscHint);
 
-    ImGui::BeginChild(label, ImVec2(-1, 83), true, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoInputs);
+    // Parameter boxes
+    auto cutoff = dspMatrix->tracks[0].params[P_FILTER_CUTOFF].load();
+    std::string cutUp   = keyRouter->getKeyName(GrooveboxAction::CUTOFF_UP);
+    std::string cutDown = keyRouter->getKeyName(GrooveboxAction::CUTOFF_DOWN);
+    std::string cutHint = "[" + cutUp + "]/[" + cutDown + "]";
+    paramBox->draw("FILTER CUTOFF", cutoff, "Hz", cutHint);
 
-        // Top row: label left, key hint right-anchored
-        float hintWidth = ImGui::CalcTextSize(keyHint.c_str()).x;
-        ImGui::Text("%s", label);
-        ImGui::SameLine(ImGui::GetWindowWidth() - hintWidth - ImGui::GetStyle().WindowPadding.x);
-        ImGui::TextColored(ImVec4(0.35f, 0.35f, 0.35f, 1.0f), "%s", keyHint.c_str());
+    auto res = dspMatrix->tracks[0].params[P_FILTER_RES].load();
+    std::string resUp   = keyRouter->getKeyName(GrooveboxAction::RES_UP);
+    std::string resDown = keyRouter->getKeyName(GrooveboxAction::RES_DOWN);
+    std::string resHint = "[" + resUp + "]/[" + resDown + "]";
+    paramBox->draw("FILTER RES", res, "%", resHint);
 
-        // Bottom row: dim cursor glyph + value — no active highlighting
-        ImGui::TextColored(ImVec4(0.5f, 0.5f, 0.5f, 1.0f), "> %.2f %s", value, unit);
+    auto attack = dspMatrix->tracks[0].params[P_AMP_ATTACK].load();
+    std::string attUp   = keyRouter->getKeyName(GrooveboxAction::ATTACK_UP);
+    std::string attDown = keyRouter->getKeyName(GrooveboxAction::ATTACK_DOWN);
+    std::string attHint = "[" + attUp + "]/[" + attDown + "]";
+    paramBox->draw("AMP ATTACK", attack, "sec", attHint);
 
-        ImGui::EndChild();
-    }
-
-    void SynthDashboard::drawToggleBox(const char* label, bool isActive, const std::string& stateStr,
-                                   GrooveboxAction toggleAction) {
-
-    std::string key = keyRouter->getKeyName(toggleAction);
-    std::string keyHint = std::string("[") + key + "]";
-
-    // If active, invert the background color of the box for high visual feedback
-    if (isActive) {
-        ImGui::PushStyleColor(ImGuiCol_ChildBg, ImVec4(0.2f, 0.2f, 0.2f, 1.0f));
-    }
-
-    ImGui::BeginChild(label, ImVec2(-1, 83), true, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoInputs);
-
-    // Top row: label left, key hint right-anchored (same method as continuous boxes)
-    float hintWidth = ImGui::CalcTextSize(keyHint.c_str()).x;
-    ImGui::Text("%s", label);
-    ImGui::SameLine(ImGui::GetWindowWidth() - hintWidth - ImGui::GetStyle().WindowPadding.x);
-    ImGui::TextColored(ImVec4(0.35f, 0.35f, 0.35f, 1.0f), "%s", keyHint.c_str());
-
-    // Bright color if active, dim if inactive
-    ImVec4 textColor = isActive ? ImVec4(1.0f, 0.7f, 0.0f, 1.0f) : ImVec4(0.5f, 0.5f, 0.5f, 1.0f);
-    ImGui::TextColored(textColor, "> %s", stateStr.c_str());
-
-    ImGui::EndChild();
-
-    if (isActive) {
-        ImGui::PopStyleColor(); // Restore normal background
-    }
+    // Latch toggle
+    bool isLatched = dspMatrix->tracks[0].params[P_LATCH_MODE].load() > 0.5f;
+    std::string latchKey = keyRouter->getKeyName(GrooveboxAction::TOGGLE_LATCH);
+    std::string latchHint = "[" + latchKey + "]";
+    toggleBox->draw("LATCH MODE", isLatched,
+                    isLatched ? "ENGAGED" : "OFF", latchHint);
 }
 
-void SynthDashboard::drawWaveformSelector(int currentWave) {
-    const char* names[5] = { "SINE", "SAW", "SQUARE", "TRIANGLE", "NOISE" };
-    const char* keyNames[5] = { "1", "2", "3", "4", "5" };
-    const ImVec4 magenta(1.0f, 0.2f, 0.8f, 1.0f);
-    const ImVec4 dim(0.5f, 0.5f, 0.5f, 1.0f);
-    const ImVec4 keyDim(0.35f, 0.35f, 0.35f, 1.0f);
+// ── RIGHT COLUMN ───────────────────────────────────────────────────────────
+void SynthDashboard::drawRightColumn(int currentWave) {
+    ImGui::TextColored(TerminalStyle::accent(), "TELEMETRY // SIGNAL");
+    ImGui::Separator();
+    ImGui::Spacing();
 
-    ImGui::BeginChild("WaveSelect", ImVec2(-1, 10 + 5 * 42), true, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoInputs);
-    ImGui::Text("%s", "WAVEFORM");
+    drawWaveformPlane(currentWave);
+    drawEnvelopeGraph();
+}
 
-    for (int i = 0; i < 5; ++i) {
-        bool isActive = (i == currentWave);
-        std::string line = std::string("> ") + names[i];
+// ── WAVEFORM PLANE ─────────────────────────────────────────────────────────
+void SynthDashboard::drawWaveformPlane(int waveType) {
+    ImGui::BeginChild("WaveformPlane",
+                      ImVec2(-1, TerminalStyle::waveformPlaneH()),
+                      true,
+                      ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoInputs);
+    ImGui::TextColored(TerminalStyle::textDim(), "WAVEFORM (post-filter)");
 
-        if (isActive)
-            ImGui::TextColored(magenta, "%s", line.c_str());
-        else
-            ImGui::TextColored(dim, "%s", line.c_str());
+    // 1. Generate DSP data
+    float fullRate[44100]; // 50ms at 44.1kHz
+    float freq = dspMatrix->previewFreq.load();
+    float cutoff = dspMatrix->tracks[0].params[P_FILTER_CUTOFF].load();
+    float res    = dspMatrix->tracks[0].params[P_FILTER_RES].load();
+    float a = dspMatrix->tracks[0].params[P_AMP_ATTACK].load();
+    float h = dspMatrix->tracks[0].params[P_AMP_HOLD].load();
+    float d = dspMatrix->tracks[0].params[P_AMP_DECAY].load();
+    float s = dspMatrix->tracks[0].params[P_AMP_SUSTAIN].load();
+    float r = dspMatrix->tracks[0].params[P_AMP_RELEASE].load();
 
-        // Right-anchor the key hint, same technique as drawContinuousBox
-        std::string keyHint = std::string("[") + keyNames[i] + "]";
-        float hintWidth = ImGui::CalcTextSize(keyHint.c_str()).x;
-        ImGui::SameLine(ImGui::GetWindowWidth() - hintWidth - ImGui::GetStyle().WindowPadding.x);
-        ImGui::TextColored(keyDim, "%s", keyHint.c_str());
+    waveGen->generate(fullRate, 44100, waveType, freq, 44100.0f,
+                      cutoff, res, a, h, d, s, r);
+
+    // 2. Decimate to display samples (pick every 20th)
+    float display[WAVEFORM_DISPLAY_SAMPLES];
+    for (int i = 0; i < WAVEFORM_DISPLAY_SAMPLES; ++i) {
+        display[i] = fullRate[i * 20];
     }
+
+    // 3. Draw via ScopeCanvas (time in seconds, amplitude ±1)
+    ImDrawList* dl = ImGui::GetWindowDrawList();
+    ImVec2 canvasPos = ImGui::GetCursorScreenPos();
+    float cw = ImGui::GetContentRegionAvail().x;
+    float ch = ImGui::GetContentRegionAvail().y;
+
+    scopeCanvas->begin(dl, canvasPos, ImVec2(cw, ch),
+                       0.0f, 0.05f,   // X: 0ms → 50ms
+                       -1.0f, 1.0f);  // Y: -1 → +1
+    scopeCanvas->drawCrossHairs();
+    scopeCanvas->yLabel("1", 1.0f);
+    scopeCanvas->yLabel("0", 0.0f);
+    scopeCanvas->yLabel("-1", -1.0f);
+    scopeCanvas->xLabel("0ms", 0.0f);
+    scopeCanvas->xLabel("25ms", 0.025f);
+    scopeCanvas->xLabel("50ms", 0.05f);
+    scopeCanvas->plotLine(display, WAVEFORM_DISPLAY_SAMPLES,
+                          TerminalStyle::colWhite(),
+                          TerminalStyle::lineThickness());
+    scopeCanvas->end();
 
     ImGui::EndChild();
 }
 
-void SynthDashboard::generateWaveformPreview(float* outBuffer, int numSamples,
-                                              int waveType, float cutoffHz,
-                                              float resonance, float sampleRate) {
-    // Generate a single cycle of the raw waveform, then pass it through the
-    // same 4-pole cascaded low-pass filter that the audio engine uses.
+// ── ENVELOPE GRAPH ─────────────────────────────────────────────────────────
+void SynthDashboard::drawEnvelopeGraph() {
+    ImGui::BeginChild("EnvelopeGraph",
+                      ImVec2(-1, TerminalStyle::envelopeGraphH()),
+                      true,
+                      ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoInputs);
+    ImGui::TextColored(TerminalStyle::textDim(), "AMP ENVELOPE SHAPE");
 
-    const float numCycles = 1.0f;
+    float a = dspMatrix->tracks[0].params[P_AMP_ATTACK].load();
+    float h = dspMatrix->tracks[0].params[P_AMP_HOLD].load();
+    float d = dspMatrix->tracks[0].params[P_AMP_DECAY].load();
+    float s = dspMatrix->tracks[0].params[P_AMP_SUSTAIN].load();
+    float r = dspMatrix->tracks[0].params[P_AMP_RELEASE].load();
 
-    // --- Step 1: generate the raw waveform ---
-    for (int i = 0; i < numSamples; ++i) {
-        float phase = std::fmod((float)i / (float)numSamples * numCycles, 1.0f);
-        float raw = 0.0f;
+    float envPlot[100];
+    envGen->generate(envPlot, 100, a, h, d, s, r);
 
-        switch (waveType) {
-            case 0: // Sine
-                raw = std::sin(phase * 2.0f * M_PI);
-                break;
-            case 1: // Saw
-                raw = 2.0f * phase - 1.0f;
-                break;
-            case 2: // Square
-                raw = (phase < 0.5f) ? 1.0f : -1.0f;
-                break;
-            case 3: // Triangle
-                raw = 4.0f * std::abs(phase - 0.5f) - 1.0f;
-                break;
-            case 4: // Noise (seed by sample index to be deterministic for preview)
-                raw = ((float)((i * 12345 + 6789) % 1000) / 500.0f) - 1.0f;
-                break;
-        }
+    // Draw via ScopeCanvas (time in seconds, amplitude 0→1)
+    ImDrawList* dl = ImGui::GetWindowDrawList();
+    ImVec2 canvasPos = ImGui::GetCursorScreenPos();
+    float cw = ImGui::GetContentRegionAvail().x;
+    float ch = ImGui::GetContentRegionAvail().y;
 
-        outBuffer[i] = raw;
-    }
+    scopeCanvas->begin(dl, canvasPos, ImVec2(cw, ch),
+                       0.0f, 1.0f,  // X: normalized 0→1
+                       0.0f, 1.1f); // Y: 0→1.1 (slightly above max)
+    scopeCanvas->plotLine(envPlot, 100,
+                          TerminalStyle::colAmber(),
+                          TerminalStyle::lineThickness());
+    scopeCanvas->end();
 
-    // --- Step 2: apply the actual 4-pole cascade filter (same as LowPassFilter) ---
-    // Clamp cutoff
-    if (cutoffHz < 20.0f) cutoffHz = 20.0f;
-    if (cutoffHz > 20000.0f) cutoffHz = 20000.0f;
-    if (resonance < 0.0f) resonance = 0.0f;
-    if (resonance > 3.99f) resonance = 3.99f;
-
-    // Calculate 'g' coefficient the same way LowPassFilter::setCutoff does
-    float g = 1.0f - std::exp(-2.0f * (float)M_PI * cutoffHz / sampleRate);
-
-    // Run the 4-pole cascade
-    float s1 = 0.0f, s2 = 0.0f, s3 = 0.0f, s4 = 0.0f;
-    for (int i = 0; i < numSamples; ++i) {
-        float resonatedInput = outBuffer[i] - (s4 * resonance);
-        s1 = s1 + g * (resonatedInput - s1);
-        s2 = s2 + g * (s1 - s2);
-        s3 = s3 + g * (s2 - s3);
-        s4 = s4 + g * (s3 - s4);
-
-        // Clamp to avoid floating-point runaway at high resonance
-        float result = s4;
-        if (result > 1.0f) result = 1.0f;
-        if (result < -1.0f) result = -1.0f;
-
-        outBuffer[i] = result;
-    }
+    ImGui::EndChild();
 }

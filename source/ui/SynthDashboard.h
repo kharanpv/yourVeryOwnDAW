@@ -3,38 +3,41 @@
 #include <memory>
 #include <string>
 #include <imgui.h>
-#include "../core/SharedMatrix.h"    // Your atomic data bridge
-#include "../input/KeymapRouter.h"    // To look up dynamic key bindings
+#include "../core/SharedMatrix.h"
+#include "../input/KeymapRouter.h"
+
+class ScopeCanvas;
+class ParamBox;
+class ToggleBox;
+class WaveformSelector;
+class WaveformGenerator;
+class EnvelopeGenerator;
 
 class SynthDashboard {
 public:
-    SynthDashboard(std::shared_ptr<SharedMatrix> matrix, std::shared_ptr<KeymapRouter> router);
-
-    // Called every frame in your main loop
+    SynthDashboard(std::shared_ptr<SharedMatrix> matrix,
+                   std::shared_ptr<KeymapRouter> router);
+    ~SynthDashboard();
     void render();
 
 private:
+    // SynthDashboard(const SynthDashboard&) = delete;
+    // SynthDashboard& operator=(const SynthDashboard&) = delete;
+
+    void setupTerminalTheme();
+    void drawLeftColumn(int currentWave);
+    void drawRightColumn(int currentWave);
+    void drawWaveformPlane(int waveType);
+    void drawEnvelopeGraph();
+
     std::shared_ptr<SharedMatrix> dspMatrix;
     std::shared_ptr<KeymapRouter> keyRouter;
 
-    // --- High-Resolution Terminal Aesthetic Helpers ---
-    void setupTerminalTheme();
-
-    // Draws a rigid box for continuous values (e.g., Cutoff, Attack).
-    // No active-highlighting — every box looks the same regardless of last-touched.
-    void drawContinuousBox(const char* label, float value, const char* unit,
-                           GrooveboxAction actionUp, GrooveboxAction actionDown);
-
-    // Draws a rigid box for booleans (e.g., Latch, Oscillator Type)
-    void drawToggleBox(const char* label, bool isActive, const std::string& stateStr, 
-                       GrooveboxAction toggleAction);
-
-    // Draws a read-only waveform indicator (no clickable buttons — keyboard only)
-    void drawWaveformSelector(int currentWave);
-
-    // Generates a single-cycle preview waveform (one period of the oscillator),
-    // filtered through the same 4-pole cascade as the audio engine, so cutoff
-    // and resonance changes are reflected visually.
-    void generateWaveformPreview(float* outBuffer, int numSamples, int waveType,
-                                  float cutoffHz, float resonance, float sampleRate);
+    // Reusable component instances (owned via unique_ptr)
+    std::unique_ptr<ParamBox>         paramBox;
+    std::unique_ptr<ToggleBox>        toggleBox;
+    std::unique_ptr<WaveformSelector> waveformSelector;
+    std::unique_ptr<ScopeCanvas>      scopeCanvas;
+    std::unique_ptr<WaveformGenerator> waveGen;
+    std::unique_ptr<EnvelopeGenerator> envGen;
 };

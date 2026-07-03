@@ -129,9 +129,11 @@ int main(int argc, char* argv[]) {
             sharedMatrix->tracks[0].params[P_LATCH_MODE].store(latched ? 1.0f : 0.0f);
         }
 
-        // Note-on edge — tune oscillator to MIDI note and trigger envelope
+        // Note-on edge — tune oscillator to MIDI note, store frequency, and trigger envelope
         int noteOn = inputManager.consumeNoteOn();
         if (noteOn >= 0 && noteOn < 12) {
+            float freq = 440.0f * std::pow(2.0f, (AUDITION_MIDI_NOTES[noteOn] - 69) / 12.0f);
+            sharedMatrix->previewFreq.store(freq);
             myVoice.playNote(AUDITION_MIDI_NOTES[noteOn]);
         }
 
