@@ -5,34 +5,45 @@ void ScopeCanvas::begin(ImDrawList* drawList, ImVec2 pixelPos, ImVec2 pixelSize,
                         float dataMinX, float dataMaxX,
                         float dataMinY, float dataMaxY) {
     dl = drawList;
-    pos = pixelPos;
-    size = pixelSize;
+    outerPos  = pixelPos;
+    outerSize = pixelSize;
     dMinX = dataMinX;
     dMaxX = dataMaxX;
     dMinY = dataMinY;
     dMaxY = dataMaxY;
 
+    // Graph area is inset from the outer rect by the uniform label margin
+    float m = TerminalStyle::labelMargin();
+    graphPos  = ImVec2(outerPos.x + m, outerPos.y + m);
+    graphSize = ImVec2(outerSize.x - 2.0f * m, outerSize.y - 2.0f * m);
+
     float dx = dMaxX - dMinX;
     float dy = dMaxY - dMinY;
-    scaleX = (dx != 0.0f) ? size.x / dx : 1.0f;
-    scaleY = (dy != 0.0f) ? size.y / dy : 1.0f;
+    scaleX = (dx != 0.0f) ? graphSize.x / dx : 1.0f;
+    scaleY = (dy != 0.0f) ? graphSize.y / dy : 1.0f;
 
-    // Black background
-    dl->AddRectFilled(pos, ImVec2(pos.x + size.x, pos.y + size.y),
+    // Black background over the full region
+    dl->AddRectFilled(outerPos,
+                      ImVec2(outerPos.x + outerSize.x, outerPos.y + outerSize.y),
                       TerminalStyle::colBlack());
+
+    // Border around the graph area
+    dl->AddRect(graphPos,
+                ImVec2(graphPos.x + graphSize.x, graphPos.y + graphSize.y),
+                TerminalStyle::colBorder(), 0.0f, 0, TerminalStyle::axisThickness());
 }
 
 void ScopeCanvas::drawHorizontalAxis(float dataY) {
     ImVec2 left  = dataToPixel(dMinX, dataY);
     ImVec2 right = dataToPixel(dMaxX, dataY);
-    dl->AddLine(ImVec2(left.x, left.y), ImVec2(right.x, right.y),
+    dl->AddLine(left, right,
                 TerminalStyle::colAxis(), TerminalStyle::axisThickness());
 }
 
 void ScopeCanvas::drawVerticalAxis(float dataX) {
     ImVec2 top = dataToPixel(dataX, dMaxY);
     ImVec2 bot = dataToPixel(dataX, dMinY);
-    dl->AddLine(ImVec2(top.x, top.y), ImVec2(bot.x, bot.y),
+    dl->AddLine(top, bot,
                 TerminalStyle::colAxis(), TerminalStyle::axisThickness());
 }
 
@@ -42,18 +53,48 @@ void ScopeCanvas::drawCrossHairs() {
 }
 
 void ScopeCanvas::yLabel(const char* text, float dataY) {
+    if (!yLabelsOn) return;
+
     ImVec2 p = dataToPixel(dMinX, dataY);
-    dl->AddText(ImVec2(pos.x + 4.0f, p.y - ImGui::GetTextLineHeight() * 0.5f),
-                TerminalStyle::colDimText(), text);
+
+    // Tick: inner edge of border → inward into margin
+    float tick = TerminalStyle::tickLength();
+    float half = TerminalStyle::axisThickness() * 0.5f;
+    dl->AddLine(ImVec2(graphPos.x - half, p.y),
+                ImVec2(graphPos.x - half - tick, p.y),
+                TerminalStyle::colAxis(), TerminalStyle::axisThickness());
+
+    // Text: right-aligned, sitting above the tick point
+    float textW = ImGui::CalcTextSize(text).x;
+    float tx = graphPos.x - half - tick - 4.0f - textW;
+    float ty = p.y - ImGui::GetTextLineHeight();
+    dl->AddText(ImVec2(tx, ty), TerminalStyle::colDimText(), text);
 }
 
 void ScopeCanvas::xLabel(const char* text, float dataX) {
+    if (!xLabelsOn) return;
+
     ImVec2 p = dataToPixel(dataX, dMinY);
+
+    // Tick: inner edge of border → downward into margin
+    float tick = TerminalStyle::tickLength();
+    float half = TerminalStyle::axisThickness() * 0.5f;
+    float graphBottom = graphPos.y + graphSize.y + half;
+    dl->AddLine(ImVec2(p.x, graphBottom),
+                ImVec2(p.x, graphBottom + tick),
+                TerminalStyle::colAxis(), TerminalStyle::axisThickness());
+
+    // Text: horizontally centered, below the tick
     float textW = ImGui::CalcTextSize(text).x;
-    float x = p.x - textW * 0.5f;
-    float y = pos.y + size.y - ImGui::GetTextLineHeight() - 2.0f;
-    if (x < pos.x + 2.0f) x = pos.x + 2.0f;
-    dl->AddText(ImVec2(x, y), TerminalStyle::colDimText(), text);
+    float tx = p.x - textW * 0.5f;
+    float ty = graphBottom + tick + 2.0f;
+
+    // Clamp to outer rect bounds
+    if (tx < outerPos.x) tx = outerPos.x;
+    if (tx + textW > outerPos.x + outerSize.x)
+        tx = outerPos.x + outerSize.x - textW;
+
+    dl->AddText(ImVec2(tx, ty), TerminalStyle::colDimText(), text);
 }
 
 void ScopeCanvas::plotLine(const float* yValues, int count, ImU32 color, float thickness) {
@@ -69,12 +110,11 @@ void ScopeCanvas::plotLine(const float* yValues, int count, ImU32 color, float t
 }
 
 void ScopeCanvas::end() {
-    // Reserve space in the ImGui layout so the parent window respects our size
-    ImGui::Dummy(size);
+    ImGui::Dummy(outerSize);
 }
 
 ImVec2 ScopeCanvas::dataToPixel(float dataX, float dataY) const {
-    float px = pos.x + (dataX - dMinX) * scaleX;
-    float py = pos.y + (dMaxY - dataY) * scaleY; // flip Y: data-up → pixel-down
+    float px = graphPos.x + (dataX - dMinX) * scaleX;
+    float py = graphPos.y + (graphSize.y - (dataY - dMinY) * scaleY);
     return ImVec2(px, py);
 }

@@ -28,6 +28,7 @@ inline ImVec4 textLabel()   { return ImVec4(0.40f, 0.40f, 0.40f, 1.00f); }
 inline ImVec4 accent()      { return ImVec4(0.0f,  1.0f,  0.8f,  1.00f); }
 inline ImVec4 magenta()     { return ImVec4(1.0f,  0.2f,  0.8f,  1.00f); }
 inline ImVec4 amber()       { return ImVec4(1.0f,  0.7f,  0.0f,  1.00f); }
+inline ImVec4 bgBlack()     { return ImVec4(0.00f, 0.00f, 0.00f, 1.00f); }
 inline ImVec4 childBg()     { return ImVec4(0.05f, 0.05f, 0.05f, 1.00f); }
 inline ImVec4 activeChildBg() { return ImVec4(0.20f, 0.20f, 0.20f, 1.00f); }
 
@@ -38,8 +39,8 @@ inline float windowPadding()   { return 8.0f;  }
 inline float lineThickness()   { return 2.5f;  }
 inline float axisThickness()   { return 1.0f;  }
 
-// ── Widget dimensions ──
-inline float waveformPlaneH()  { return 360.0f; }
-inline float envelopeGraphH()  { return 252.0f; }
+// ── ScopeCanvas margins (space outside the graph for labels + ticks) ──
+inline float labelMargin()     { return 40.0f; }  // uniform margin on all four sides
+inline float tickLength()      { return 6.0f;  }
 
 } // namespace TerminalStyle

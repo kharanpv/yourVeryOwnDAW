@@ -12,7 +12,8 @@
 // ────────────────────────────────────────────────────────────────────────────
 class EnvelopePanel {
 public:
-    float height() const { return 252.0f; }
+    // Height includes the ScopeCanvas graph + its bottom margin for x-labels
+    float height() const { return 252.0f + 2.0f * 40.0f; }
 
     // Render the envelope shape panel.
     void render(SharedMatrix& matrix);

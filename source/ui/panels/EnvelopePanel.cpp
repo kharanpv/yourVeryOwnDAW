@@ -4,7 +4,7 @@
 void EnvelopePanel::render(SharedMatrix& matrix) {
     ImGui::BeginChild("EnvelopeGraph",
                       ImVec2(-1, height()),
-                      true,
+                      false,
                       ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoInputs);
     ImGui::TextColored(TerminalStyle::textDim(), "AMP ENVELOPE SHAPE");
 
@@ -28,7 +28,9 @@ void EnvelopePanel::render(SharedMatrix& matrix) {
     canvas.begin(dl, canvasPos, ImVec2(cw, ch),
                  0.0f, 1.0f,   // X: normalized 0→1
                  0.0f, 1.1f);  // Y: 0→1.1 (slightly above max)
-    canvas.drawHorizontalAxis(0.0f);  // baseline at Y=0 (meaningful for envelope)
+    canvas.showYLabels(false);  // shape is self-explanatory
+    canvas.showXLabels(false);
+    canvas.drawHorizontalAxis(0.0f);  // baseline at Y=0
     canvas.plotLine(envPlot, 100,
                     TerminalStyle::colAmber(),
                     TerminalStyle::lineThickness());

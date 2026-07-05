@@ -13,7 +13,8 @@
 // ────────────────────────────────────────────────────────────────────────────
 class WaveformPanel {
 public:
-    float height() const { return 360.0f; }
+    // Height includes the ScopeCanvas graph + its bottom margin for x-labels
+    float height() const { return 360.0f + 2.0f * 40.0f; }
 
     // Render the panel. waveType: 0–4 (SINE/SAW/SQUARE/TRIANGLE/NOISE).
     void render(SharedMatrix& matrix, int waveType);

@@ -6,7 +6,7 @@
 void WaveformPanel::render(SharedMatrix& matrix, int waveType) {
     ImGui::BeginChild("WaveformPlane",
                       ImVec2(-1, height()),
-                      true,
+                      false,
                       ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoInputs);
     ImGui::TextColored(TerminalStyle::textDim(), "WAVEFORM (post-filter)");
 
@@ -40,14 +40,13 @@ void WaveformPanel::render(SharedMatrix& matrix, int waveType) {
     canvas.begin(dl, canvasPos, ImVec2(cw, ch),
                  0.0f, 0.05f,   // X: 0ms → 50ms
                  -1.0f, 1.0f);  // Y: -1 → +1
-    canvas.drawHorizontalAxis(0.0f);  // zero-crossing baseline
-    canvas.drawVerticalAxis(0.025f);  // vertical cross at 25ms
+    canvas.showYLabels(true);
+    canvas.showXLabels(false);   // time labels not useful here
+    canvas.drawHorizontalAxis(0.0f);
+    canvas.drawVerticalAxis(0.025f);
     canvas.yLabel("1", 1.0f);
     canvas.yLabel("0", 0.0f);
     canvas.yLabel("-1", -1.0f);
-    canvas.xLabel("0ms", 0.0f);
-    canvas.xLabel("25ms", 0.025f);
-    canvas.xLabel("50ms", 0.05f);
     canvas.plotLine(display, WAVEFORM_DISPLAY_SAMPLES,
                     TerminalStyle::colWhite(),
                     TerminalStyle::lineThickness());

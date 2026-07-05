@@ -85,7 +85,7 @@ void AppWindow::beginUiFrame() {
 }
 
 void AppWindow::clear() {
-    SDL_SetRenderDrawColor(renderer, 30, 30, 30, 255);
+    SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
     SDL_RenderClear(renderer);
 }
 

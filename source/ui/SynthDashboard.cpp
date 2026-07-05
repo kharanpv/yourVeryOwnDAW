@@ -28,7 +28,8 @@ void SynthDashboard::setupTerminalTheme() {
     style.WindowRounding = 0.0f;
     style.ChildRounding = 0.0f;
     style.FrameRounding = 0.0f;
-    style.Colors[ImGuiCol_WindowBg] = TerminalStyle::childBg();
+    style.Colors[ImGuiCol_WindowBg] = TerminalStyle::bgBlack();
+    style.Colors[ImGuiCol_ChildBg]  = TerminalStyle::bgBlack();
     style.Colors[ImGuiCol_Border]   = ImVec4(0.30f, 0.30f, 0.30f, 1.00f);
     style.Colors[ImGuiCol_Text]     = TerminalStyle::textWhite();
     style.WindowPadding = ImVec2(TerminalStyle::windowPadding(),
@@ -47,7 +48,7 @@ void SynthDashboard::render() {
 
     ImGui::Begin("Terminal_HUD", nullptr, flags);
 
-    if (ImGui::BeginTable("HudLayout", 2, ImGuiTableFlags_BordersInnerV)) {
+    if (ImGui::BeginTable("HudLayout", 2)) {
         ImGui::TableSetupColumn("Parameters", ImGuiTableColumnFlags_WidthStretch, 0.33f);
         ImGui::TableSetupColumn("Telemetry",  ImGuiTableColumnFlags_WidthStretch, 0.603f);
         ImGui::TableNextRow();
