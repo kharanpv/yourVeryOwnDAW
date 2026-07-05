@@ -75,7 +75,7 @@ Now that the audition keys work and the UI is responsive, surface them visually 
   - Same visual as active-note indicator, but persistent.
   - No separate accent color — latch is conveyed by the persistence of the greyed key.
 
-* [ ] **Frequency Reference Box:** Add a read-only "OSC FREQ" box in the left Parameters column displaying the last-played note's frequency in Hz.
+* [x] **Frequency Reference Box:** Add a read-only "OSC FREQ" box in the left Parameters column displaying the last-played note's frequency in Hz.
 
 ### Phase 6: UI Refactor — Reusable Component Library
 Extracted all visual elements into standalone, reusable components under `source/ui/elements/`.
@@ -92,11 +92,11 @@ Extracted all visual elements into standalone, reusable components under `source
 ### Phase 7: Full AHDSR Parameter Controls
 Wire up keybindable controls for all five AHDSR envelope stages in the left Parameters column.
 
-* [ ] **AMP HOLD box:** Add keybindable up/down controls for the Hold duration.
-* [ ] **AMP DECAY box:** Add keybindable up/down controls for the Decay time.
-* [ ] **AMP SUSTAIN box:** Add keybindable up/down controls for the Sustain level.
-* [ ] **AMP RELEASE box:** Add keybindable up/down controls for the Release time.
-* [ ] **Define key mappings** in `config.json` and `KeymapRouter` for the four new knob actions.
+* [x] **AMP HOLD box:** Add keybindable up/down controls for the Hold duration.
+* [x] **AMP DECAY box:** Add keybindable up/down controls for the Decay time.
+* [x] **AMP SUSTAIN box:** Add keybindable up/down controls for the Sustain level.
+* [x] **AMP RELEASE box:** Add keybindable up/down controls for the Release time.
+* [x] **Define key mappings** in `KeymapRouter` for the four new knob actions (F/V = HOLD, G/B = DECAY, H/N = SUSTAIN, J/M = RELEASE).
 
 ### Phase 8: Piano Roll Overlay (The Audition Keyboard)
 Render a visual piano keyboard in the right Telemetry column below the envelope graph.

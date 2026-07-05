@@ -5,6 +5,78 @@ KeymapRouter::KeymapRouter() {
     loadLayerOneMapping();
 }
 
+GrooveboxAction KeymapRouter::actionFromString(const std::string& name) {
+    // Build the lookup once — static so it persists across calls
+    static const std::unordered_map<std::string, GrooveboxAction> table = {
+        {"CUTOFF_UP",       GrooveboxAction::CUTOFF_UP},
+        {"CUTOFF_DOWN",     GrooveboxAction::CUTOFF_DOWN},
+        {"RES_UP",          GrooveboxAction::RES_UP},
+        {"RES_DOWN",        GrooveboxAction::RES_DOWN},
+        {"ATTACK_UP",       GrooveboxAction::ATTACK_UP},
+        {"ATTACK_DOWN",     GrooveboxAction::ATTACK_DOWN},
+        {"HOLD_UP",         GrooveboxAction::HOLD_UP},
+        {"HOLD_DOWN",       GrooveboxAction::HOLD_DOWN},
+        {"DECAY_UP",        GrooveboxAction::DECAY_UP},
+        {"DECAY_DOWN",      GrooveboxAction::DECAY_DOWN},
+        {"SUSTAIN_UP",      GrooveboxAction::SUSTAIN_UP},
+        {"SUSTAIN_DOWN",    GrooveboxAction::SUSTAIN_DOWN},
+        {"RELEASE_UP",      GrooveboxAction::RELEASE_UP},
+        {"RELEASE_DOWN",    GrooveboxAction::RELEASE_DOWN},
+        {"TOGGLE_LATCH",    GrooveboxAction::TOGGLE_LATCH},
+        {"WAVEFORM_SINE",   GrooveboxAction::WAVEFORM_SINE},
+        {"WAVEFORM_SAW",    GrooveboxAction::WAVEFORM_SAW},
+        {"WAVEFORM_SQUARE", GrooveboxAction::WAVEFORM_SQUARE},
+        {"WAVEFORM_TRIANGLE", GrooveboxAction::WAVEFORM_TRIANGLE},
+        {"WAVEFORM_NOISE",  GrooveboxAction::WAVEFORM_NOISE},
+        {"AUDITION_NOTE_0", GrooveboxAction::AUDITION_NOTE_0},
+        {"AUDITION_NOTE_1", GrooveboxAction::AUDITION_NOTE_1},
+        {"AUDITION_NOTE_2", GrooveboxAction::AUDITION_NOTE_2},
+        {"AUDITION_NOTE_3", GrooveboxAction::AUDITION_NOTE_3},
+        {"AUDITION_NOTE_4", GrooveboxAction::AUDITION_NOTE_4},
+        {"AUDITION_NOTE_5", GrooveboxAction::AUDITION_NOTE_5},
+        {"AUDITION_NOTE_6", GrooveboxAction::AUDITION_NOTE_6},
+        {"AUDITION_NOTE_7", GrooveboxAction::AUDITION_NOTE_7},
+        {"AUDITION_NOTE_8", GrooveboxAction::AUDITION_NOTE_8},
+        {"AUDITION_NOTE_9", GrooveboxAction::AUDITION_NOTE_9},
+        {"AUDITION_NOTE_10", GrooveboxAction::AUDITION_NOTE_10},
+        {"AUDITION_NOTE_11", GrooveboxAction::AUDITION_NOTE_11},
+    };
+
+    auto it = table.find(name);
+    if (it != table.end()) return it->second;
+    return GrooveboxAction::NONE;
+}
+
+void KeymapRouter::unmapAction(GrooveboxAction action) {
+    // Remove any key that currently maps to this action
+    for (auto it = activeKeymap.begin(); it != activeKeymap.end(); ) {
+        if (it->second == action) {
+            it = activeKeymap.erase(it);
+        } else {
+            ++it;
+        }
+    }
+}
+
+void KeymapRouter::loadFromConfig(const std::unordered_map<SDL_Keycode, std::string>& bindings) {
+    // First unmap any default bindings for actions that the user is overriding.
+    // This prevents stale key->action entries (e.g. "1" still bound to WAVEFORM_SINE
+    // after the user remaps it to "6").
+    for (const auto& [keyCode, actionName] : bindings) {
+        GrooveboxAction action = actionFromString(actionName);
+        if (action != GrooveboxAction::NONE) {
+            unmapAction(action);
+        }
+    }
+    // Now overlay the user's explicit bindings
+    for (const auto& [keyCode, actionName] : bindings) {
+        GrooveboxAction action = actionFromString(actionName);
+        if (action != GrooveboxAction::NONE) {
+            activeKeymap[keyCode] = action;
+        }
+    }
+}
+
 void KeymapRouter::loadLayerOneMapping() {
     activeKeymap.clear();
 

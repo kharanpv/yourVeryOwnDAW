@@ -111,11 +111,11 @@ Extracted all visual elements into standalone, reusable components under `source
 ### Step 10: Full AHDSR Parameter Controls
 Wire up keybindable controls for all five AHDSR envelope stages in the left Parameters column.
 
-* [ ] **AMP HOLD box:** Add keybindable up/down controls for the Hold duration.
-* [ ] **AMP DECAY box:** Add keybindable up/down controls for the Decay time.
-* [ ] **AMP SUSTAIN box:** Add keybindable up/down controls for the Sustain level.
-* [ ] **AMP RELEASE box:** Add keybindable up/down controls for the Release time.
-* [ ] **Define key mappings** in `config.json` and `KeymapRouter` for the four new knob actions.
+* [x] **AMP HOLD box:** Add keybindable up/down controls for the Hold duration.
+* [x] **AMP DECAY box:** Add keybindable up/down controls for the Decay time.
+* [x] **AMP SUSTAIN box:** Add keybindable up/down controls for the Sustain level.
+* [x] **AMP RELEASE box:** Add keybindable up/down controls for the Release time.
+* [x] **Define key mappings** in `KeymapRouter` for the four new knob actions (F/V = HOLD, G/B = DECAY, H/N = SUSTAIN, J/M = RELEASE).
 
 ### Step 11: Piano Roll Overlay (The Audition Keyboard)
 Render a visual piano keyboard in the right Telemetry column so the user can see which QWERTY keys map to which notes.

@@ -12,6 +12,9 @@
 #include "dsp/oscillators/TriangleOscillator.h"
 #include "dsp/oscillators/NoiseGenerator.h"
 
+// --- Config Headers ---
+#include "config/ConfigLoader.h"
+
 // --- Input Headers ---
 #include "input/KeymapRouter.h"
 #include "input/InputStateManager.h"
@@ -60,11 +63,17 @@ int main(int argc, char* argv[]) {
     // 1. ALLOCATE THE THREAD BRIDGE
     auto sharedMatrix = std::make_shared<SharedMatrix>();
 
-    // 2. BOOT THE INPUT ENGINE
+    // 2. LOAD USER CONFIGURATION
+    // The executable runs from build/; ../config.json reaches the project root.
+    ConfigLoader configLoader("../config.json");
+
+    // 3. BOOT THE INPUT ENGINE — config.json keybindings override hardcoded defaults
     auto keyRouter = std::make_shared<KeymapRouter>();
+    keyRouter->loadFromConfig(configLoader.getKeybindings());
+
     InputStateManager inputManager;
     inputManager.setBaseSpeed(0.005f);
-    inputManager.setAccelerationCurve(4.0f);
+    inputManager.setAccelerationCurve(configLoader.getKnobAccelerationCurve());
 
     // 3. BOOT THE AUDIO ENGINE — create all 5 waveforms
     SineOscillator     sineOsc(44100.0f, 440.0f);

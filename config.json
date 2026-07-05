@@ -1,27 +1,40 @@
 {
-    "hardware_emulation": {
-        "knob_acceleration_curve": 4.0,
-        "knob_hold_delay_ms": 300
-    },
-    "keybindings": {
-        "Up": "NAV_UP",
-        "Down": "NAV_DOWN",
-        "[": "PARAM_DEC",
-        "]": "PARAM_INC",
-        "Space": "TOGGLE_LATCH",
-        
-        "A": "AUDITION_NOTE_C4",
-        "W": "AUDITION_NOTE_CS4",
-        "S": "AUDITION_NOTE_D4",
-        "E": "AUDITION_NOTE_DS4",
-        "D": "AUDITION_NOTE_E4",
-        "F": "AUDITION_NOTE_F4",
-        "T": "AUDITION_NOTE_FS4",
-        "G": "AUDITION_NOTE_G4",
-        "Y": "AUDITION_NOTE_GS4",
-        "H": "AUDITION_NOTE_A4",
-        "U": "AUDITION_NOTE_AS4",
-        "J": "AUDITION_NOTE_B4",
-        "K": "AUDITION_NOTE_C5"
-    }
+  "hardware_emulation": {
+    "knob_acceleration_curve": 4.0,
+    "knob_hold_delay_ms": 300
+  },
+  "keybindings": {
+    "A": "CUTOFF_UP",
+    "Z": "CUTOFF_DOWN",
+    "S": "RES_UP",
+    "X": "RES_DOWN",
+    "D": "ATTACK_UP",
+    "C": "ATTACK_DOWN",
+    "F": "HOLD_UP",
+    "V": "HOLD_DOWN",
+    "G": "DECAY_UP",
+    "B": "DECAY_DOWN",
+    "H": "SUSTAIN_UP",
+    "N": "SUSTAIN_DOWN",
+    "J": "RELEASE_UP",
+    "M": "RELEASE_DOWN",
+    "Space": "TOGGLE_LATCH",
+    "6": "WAVEFORM_SINE",
+    "7": "WAVEFORM_SAW",
+    "8": "WAVEFORM_SQUARE",
+    "9": "WAVEFORM_TRIANGLE",
+    "0": "WAVEFORM_NOISE",
+    "Q": "AUDITION_NOTE_0",
+    "W": "AUDITION_NOTE_1",
+    "E": "AUDITION_NOTE_2",
+    "R": "AUDITION_NOTE_3",
+    "T": "AUDITION_NOTE_4",
+    "Y": "AUDITION_NOTE_5",
+    "U": "AUDITION_NOTE_6",
+    "I": "AUDITION_NOTE_7",
+    "O": "AUDITION_NOTE_8",
+    "P": "AUDITION_NOTE_9",
+    "[": "AUDITION_NOTE_10",
+    "]": "AUDITION_NOTE_11"
+  }
 }

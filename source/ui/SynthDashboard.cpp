@@ -6,6 +6,7 @@
 #include "elements/TerminalStyle.h"
 #include "panels/WaveformPanel.h"
 #include "panels/EnvelopePanel.h"
+#include "../input/GrooveboxAction.h"
 
 #include <cmath>
 
@@ -72,9 +73,21 @@ void SynthDashboard::drawLeftColumn(int currentWave) {
     ImGui::Separator();
     ImGui::Spacing();
 
-    // Waveform selector
-    const char* keyHints[5] = { "1", "2", "3", "4", "5" };
-    waveformSelector->draw(currentWave, keyHints);
+    // Waveform selector — key hints are dynamically read from the KeymapRouter
+    const GrooveboxAction waveActions[5] = {
+        GrooveboxAction::WAVEFORM_SINE,
+        GrooveboxAction::WAVEFORM_SAW,
+        GrooveboxAction::WAVEFORM_SQUARE,
+        GrooveboxAction::WAVEFORM_TRIANGLE,
+        GrooveboxAction::WAVEFORM_NOISE
+    };
+    std::string waveHints[5];
+    const char* waveHintPtrs[5];
+    for (int i = 0; i < 5; ++i) {
+        waveHints[i] = keyRouter->getKeyName(waveActions[i]);
+        waveHintPtrs[i] = waveHints[i].c_str();
+    }
+    waveformSelector->draw(currentWave, waveHintPtrs);
 
     // OSC FREQ (read-only)
     float previewFreq = dspMatrix->previewFreq.load();
