@@ -10,7 +10,9 @@
 // Usage:
 //   ScopeCanvas canvas;
 //   canvas.begin(drawList, pixelPos, pixelSize, dataMinX, dataMaxX, dataMinY, dataMaxY);
-//   canvas.drawAxes();
+//   canvas.drawHorizontalAxis(0.0f);     // horizontal line at data Y=0
+//   canvas.drawVerticalAxis(0.025f);     // vertical line at data X=0.025
+//   canvas.drawCrossHairs();             // convenience: both axes at data midpoints
 //   canvas.yLabel("1", 1.0f);
 //   canvas.xLabel("25ms", 0.025f);
 //   canvas.plotLine(data, count, IM_COL32_WHITE, 2.5f);
@@ -26,11 +28,15 @@ public:
                float dataMinX, float dataMaxX,
                float dataMinY, float dataMaxY);
 
-    // Draw grey cross-hair axes through center of the data Y-range.
-    // The vertical axis is placed at the midpoint of the X-range.
-    void drawAxes();
+    // Draw a horizontal axis line at the given data-coordinate Y value.
+    // The caller chooses the position — e.g. 0.0f for a zero-crossing line,
+    // or (dMinY + dMaxY) * 0.5f for the vertical center of the data range.
+    void drawHorizontalAxis(float dataY);
 
-    // Convenience: draw both axes at once.
+    // Draw a vertical axis line at the given data-coordinate X value.
+    void drawVerticalAxis(float dataX);
+
+    // Convenience: draw both axes through the center of the data range.
     void drawCrossHairs();
 
     // Place a text label at a data coordinate.

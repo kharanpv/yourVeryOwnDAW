@@ -22,25 +22,27 @@ void ScopeCanvas::begin(ImDrawList* drawList, ImVec2 pixelPos, ImVec2 pixelSize,
                       TerminalStyle::colBlack());
 }
 
-void ScopeCanvas::drawAxes() {
-    // Horizontal axis at Y = center of data range
-    float cy = pos.y + (dMaxY / (dMaxY - dMinY)) * size.y;
-    dl->AddLine(ImVec2(pos.x, cy), ImVec2(pos.x + size.x, cy),
+void ScopeCanvas::drawHorizontalAxis(float dataY) {
+    ImVec2 left  = dataToPixel(dMinX, dataY);
+    ImVec2 right = dataToPixel(dMaxX, dataY);
+    dl->AddLine(ImVec2(left.x, left.y), ImVec2(right.x, right.y),
                 TerminalStyle::colAxis(), TerminalStyle::axisThickness());
+}
 
-    // Vertical axis at X = center of data range
-    float cx = pos.x + size.x * 0.5f;
-    dl->AddLine(ImVec2(cx, pos.y), ImVec2(cx, pos.y + size.y),
+void ScopeCanvas::drawVerticalAxis(float dataX) {
+    ImVec2 top = dataToPixel(dataX, dMaxY);
+    ImVec2 bot = dataToPixel(dataX, dMinY);
+    dl->AddLine(ImVec2(top.x, top.y), ImVec2(bot.x, bot.y),
                 TerminalStyle::colAxis(), TerminalStyle::axisThickness());
 }
 
 void ScopeCanvas::drawCrossHairs() {
-    drawAxes();
+    drawHorizontalAxis((dMinY + dMaxY) * 0.5f);
+    drawVerticalAxis((dMinX + dMaxX) * 0.5f);
 }
 
 void ScopeCanvas::yLabel(const char* text, float dataY) {
     ImVec2 p = dataToPixel(dMinX, dataY);
-    float textW = ImGui::CalcTextSize(text).x;
     dl->AddText(ImVec2(pos.x + 4.0f, p.y - ImGui::GetTextLineHeight() * 0.5f),
                 TerminalStyle::colDimText(), text);
 }
