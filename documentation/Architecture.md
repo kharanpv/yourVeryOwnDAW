@@ -31,7 +31,7 @@ This handles raw physical inputs, abstracting them into musical actions, and saf
 - [x] Virtual Encoders (State Manager): Time-based tracking that converts held keys into exponential floating-point deltas to simulate the "feel" of hardware knobs.
 - [x] The Lock-Free Data Grid (SharedMatrix): A pre-allocated, fixed-size 2D array (Tracks × Parameters) of `std::atomic<float>` variables. The main loop writes parameter changes here; the Audio thread reads them. The UI thread also reads (never writes) these atomics to display current state — completely eliminating memory allocation and thread locks during playback.
 
-> **Note:** Keybindings are user-reprogrammable via `config.json` at startup. A more inventive live reprogram system is planned for a future phase.
+> **Note:** Keybindings are user-reprogrammable via `config.json` at the project root. On boot, `ConfigLoader` reads the file and passes every binding to `KeymapRouter::loadFromConfig()`, which overlays them on top of the hardcoded defaults. Any action not present in `config.json` keeps its fallback binding. The UI dynamically queries the router for all key hints — no hardcoded key names exist outside the fallback defaults. A more inventive live reprogram system is planned for a future phase.
 
 ## ⏱️ 4. The Sequencer / Clock (The Heartbeat)
 This keeps the music perfectly in time and tells the DSP Engine what to play and when.

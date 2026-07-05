@@ -15,7 +15,7 @@ Before drawing graphics, we must capture and process raw keyboard data using tim
   * **Tap:** Increments/decrements by a micro-amount (Fine Tuning).
   * **Hold:** Applies an exponential multiplier to the rate of change the longer the key is depressed, allowing the user to "fly" to a target value quickly.
 * [x] **The "Latch" Toggle:** Implement logic for a specific key (default: `Spacebar`) that suppresses `Note Off` messages. This allows a triggered note to drone endlessly so the user's hands are free to tweak parameters.
-* [x] **Configuration Loader:** Parse a `settings.json` file on boot to dynamically load user keybindings and virtual knob tuning variables into the engine without recompiling.
+* [x] **Configuration Loader:** Parse `config.json` on boot via `ConfigLoader` to dynamically load user keybindings and virtual knob tuning variables into the engine without recompiling.
 
 ### Phase 2: The UI Canvas & Render Loop
 Before we can test our inputs or visualize audio, we must construct the empty room where the interface will live and establish the application's master infinite loop.
@@ -30,7 +30,7 @@ With the UI canvas running, we translate our abstracted keyboard inputs into imm
 * [x] **The Audition Row:** Map the **Q W E R T Y U I O P [ ]** keys to a 12-note chromatic scale (C4–B4, MIDI 60–71). Pressing these immediately fires a `Note On` event to the `SynthVoice` to test frequency response.
 * [x] **The Parameter Matrix UI:** Render a clean vertical list of available DSP parameters in ImGui. A `>` glyph precedes each value as a dim cursor. No highlighting is applied — every box is visually uniform.
 
-> **Note:** Keybindings are user-reprogrammable via `config.json` at startup. A more inventive live reprogram system is planned for a future phase.
+> **Note:** Keybindings are user-reprogrammable via `config.json` at the project root. The `ConfigLoader` reads it at startup and feeds every binding into the `KeymapRouter`. Any action not present in `config.json` keeps its hardcoded fallback binding. All UI key hints are dynamically queried from the router — no hardcoded key names exist outside the fallback defaults. A more inventive live reprogram system is planned for a future phase.
 
 ### Phase 4: Waveform Redesign (50ms Scope View)
 Replaced the old single-cycle `ImGui::PlotLines` preview with a custom-drawn 50ms waveform plane that reflects the real DSP chain.

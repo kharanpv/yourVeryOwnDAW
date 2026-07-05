@@ -37,7 +37,7 @@ Establish the thread-safe connection between the upcoming UI and the existing DS
 Build our first specific diagnostic view to visualize and control the subtractive synthesis engine.
 * [x] **The Monolithic Canvas:** Create a single, borderless `ImGui::Begin` window, anchored and scaled exactly to the size of the OS viewport to emulate a hardware screen.
 * [x] **The Telemetry Matrix:** Draw a clean, vertical list of rigid boxes displaying current DSP parameters by safely reading `std::atomic` values from the `SharedMatrix`.
-* [x] **Inline Keymap Polling:** Dynamically query the `KeymapRouter` (`getKeyName`) inside the UI render loop so each parameter box automatically displays its assigned hardware hotkeys, eliminating the need for a global footer or UI cursors.
+* [x] **Inline Keymap Polling:** Dynamically query the `KeymapRouter` (`getKeyName`) inside the UI render loop so each parameter box automatically displays its assigned hardware hotkeys, eliminating the need for a global footer or UI cursors. All key hints — including waveform selector keys — are read from the router at runtime; no hardcoded key names exist in the UI layer.
 * [x] **AHDSR Envelope Graph:** Draw the dynamically calculated AHDSR envelope shape (attack, hold, decay, sustain, release) via the reusable `ScopeCanvas` component.
 
 ### Step 5: The Master Loop Execution
