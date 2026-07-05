@@ -64,8 +64,12 @@ int main(int argc, char* argv[]) {
     auto sharedMatrix = std::make_shared<SharedMatrix>();
 
     // 2. LOAD USER CONFIGURATION
-    // The executable runs from build/; ../config.json reaches the project root.
-    ConfigLoader configLoader("../config.json");
+    // Always resolve config.json relative to the executable's own location,
+    // not the current working directory. This works from any launch path.
+    char* basePath = SDL_GetBasePath();
+    std::string configPath = std::string(basePath) + "config.json";
+    SDL_free(basePath);
+    ConfigLoader configLoader(configPath);
 
     // 3. BOOT THE INPUT ENGINE — config.json keybindings override hardcoded defaults
     auto keyRouter = std::make_shared<KeymapRouter>();

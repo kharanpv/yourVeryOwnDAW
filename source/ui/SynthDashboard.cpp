@@ -89,12 +89,6 @@ void SynthDashboard::drawLeftColumn(int currentWave) {
     }
     waveformSelector->draw(currentWave, waveHintPtrs);
 
-    // OSC FREQ (read-only)
-    float previewFreq = dspMatrix->previewFreq.load();
-    std::string oscKey = keyRouter->getKeyName(GrooveboxAction::CUTOFF_UP);
-    std::string oscHint = "[" + oscKey + "]";
-    paramBox->draw("OSC FREQ", previewFreq, "Hz", oscHint);
-
     // Parameter boxes
     auto cutoff = dspMatrix->tracks[0].params[P_FILTER_CUTOFF].load();
     std::string cutUp   = keyRouter->getKeyName(GrooveboxAction::CUTOFF_UP);

@@ -5,6 +5,12 @@ project(Your_Very_Own_DAW VERSION 0.1.0 LANGUAGES CXX)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
+# ── Build System ────────────────────────────────────────────────
+# Only Ninja is supported. Using the Visual Studio / MSBuild
+# generator will place the exe in a Debug/ subfolder, breaking
+# the expected build/Your_Very_Own_DAW.exe path. Always invoke:
+#   cmake -S . -B build -G Ninja <options>
+
 # To ensure that clangd can read the CMake list
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
