@@ -17,7 +17,8 @@ public:
     int  consumeNoteOff();  // returns note index 0-11, or -1 if none pending
 
     // Returns the index into main.cpp's PARAM_RANGES table for the currently
-    // held knob action (0=cutoff, 1=res, 2=attack), or -1 if no knob is held.
+    // held knob action (0=cutoff, 1=res, 2=attack, 3=hold, 4=decay,
+    //  5=sustain, 6=release), or -1 if no knob is held.
     int  getActiveParamIndex() const;
 
     // Waveform selection — consume the pending waveform change.

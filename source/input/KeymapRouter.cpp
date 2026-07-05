@@ -18,6 +18,18 @@ void KeymapRouter::loadLayerOneMapping() {
     activeKeymap[SDLK_d] = GrooveboxAction::ATTACK_UP;
     activeKeymap[SDLK_c] = GrooveboxAction::ATTACK_DOWN;
 
+    activeKeymap[SDLK_f] = GrooveboxAction::HOLD_UP;
+    activeKeymap[SDLK_v] = GrooveboxAction::HOLD_DOWN;
+
+    activeKeymap[SDLK_g] = GrooveboxAction::DECAY_UP;
+    activeKeymap[SDLK_b] = GrooveboxAction::DECAY_DOWN;
+
+    activeKeymap[SDLK_h] = GrooveboxAction::SUSTAIN_UP;
+    activeKeymap[SDLK_n] = GrooveboxAction::SUSTAIN_DOWN;
+
+    activeKeymap[SDLK_j] = GrooveboxAction::RELEASE_UP;
+    activeKeymap[SDLK_m] = GrooveboxAction::RELEASE_DOWN;
+
     // 2. State/Latch
     activeKeymap[SDLK_SPACE] = GrooveboxAction::TOGGLE_LATCH;
 

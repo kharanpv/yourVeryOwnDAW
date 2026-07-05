@@ -23,7 +23,15 @@ bool InputStateManager::isKnobAction(GrooveboxAction a) {
            a == GrooveboxAction::RES_UP      ||
            a == GrooveboxAction::RES_DOWN    ||
            a == GrooveboxAction::ATTACK_UP   ||
-           a == GrooveboxAction::ATTACK_DOWN;
+           a == GrooveboxAction::ATTACK_DOWN ||
+           a == GrooveboxAction::HOLD_UP     ||
+           a == GrooveboxAction::HOLD_DOWN   ||
+           a == GrooveboxAction::DECAY_UP    ||
+           a == GrooveboxAction::DECAY_DOWN  ||
+           a == GrooveboxAction::SUSTAIN_UP  ||
+           a == GrooveboxAction::SUSTAIN_DOWN||
+           a == GrooveboxAction::RELEASE_UP  ||
+           a == GrooveboxAction::RELEASE_DOWN;
 }
 
 // --- Event processing ---
@@ -83,9 +91,13 @@ float InputStateManager::updateContinuous(Uint32 currentTicks) {
     // --- One-shot on key-down: immediate single step (tap behavior) ---
     if (pendingOneShotKnobChange) {
         pendingOneShotKnobChange = false;
-        float sign = (activeKnobDirection == GrooveboxAction::CUTOFF_DOWN ||
-                      activeKnobDirection == GrooveboxAction::RES_DOWN    ||
-                      activeKnobDirection == GrooveboxAction::ATTACK_DOWN) ? -1.0f : 1.0f;
+        float sign = (activeKnobDirection == GrooveboxAction::CUTOFF_DOWN   ||
+                      activeKnobDirection == GrooveboxAction::RES_DOWN      ||
+                      activeKnobDirection == GrooveboxAction::ATTACK_DOWN   ||
+                      activeKnobDirection == GrooveboxAction::HOLD_DOWN     ||
+                      activeKnobDirection == GrooveboxAction::DECAY_DOWN    ||
+                      activeKnobDirection == GrooveboxAction::SUSTAIN_DOWN  ||
+                      activeKnobDirection == GrooveboxAction::RELEASE_DOWN) ? -1.0f : 1.0f;
         return sign * tapStep;
     }
 
@@ -105,9 +117,13 @@ float InputStateManager::updateContinuous(Uint32 currentTicks) {
     float speed = baseSpeed * (1.0f + holdSeconds * accelerationCurve);
     float delta = speed * dt;
 
-    if (activeKnobDirection == GrooveboxAction::CUTOFF_DOWN ||
-        activeKnobDirection == GrooveboxAction::RES_DOWN    ||
-        activeKnobDirection == GrooveboxAction::ATTACK_DOWN) {
+    if (activeKnobDirection == GrooveboxAction::CUTOFF_DOWN   ||
+        activeKnobDirection == GrooveboxAction::RES_DOWN      ||
+        activeKnobDirection == GrooveboxAction::ATTACK_DOWN   ||
+        activeKnobDirection == GrooveboxAction::HOLD_DOWN     ||
+        activeKnobDirection == GrooveboxAction::DECAY_DOWN    ||
+        activeKnobDirection == GrooveboxAction::SUSTAIN_DOWN  ||
+        activeKnobDirection == GrooveboxAction::RELEASE_DOWN) {
         delta = -delta;
     }
 
@@ -152,6 +168,14 @@ int InputStateManager::getActiveParamIndex() const {
         case GrooveboxAction::RES_DOWN:    return 1;
         case GrooveboxAction::ATTACK_UP:   return 2;
         case GrooveboxAction::ATTACK_DOWN: return 2;
+        case GrooveboxAction::HOLD_UP:     return 3;
+        case GrooveboxAction::HOLD_DOWN:   return 3;
+        case GrooveboxAction::DECAY_UP:    return 4;
+        case GrooveboxAction::DECAY_DOWN:  return 4;
+        case GrooveboxAction::SUSTAIN_UP:  return 5;
+        case GrooveboxAction::SUSTAIN_DOWN:return 5;
+        case GrooveboxAction::RELEASE_UP:  return 6;
+        case GrooveboxAction::RELEASE_DOWN:return 6;
         default:                           return -1;
     }
 }

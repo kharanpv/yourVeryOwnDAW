@@ -38,6 +38,10 @@ static const ParamRange PARAM_RANGES[] = {
     { P_FILTER_CUTOFF, 20.0f,   20000.0f, 300.0f  }, // Hz — sweeps fast
     { P_FILTER_RES,    0.0f,    1.0f,     1.0f    }, // 0–1 normalized
     { P_AMP_ATTACK,    0.0f,    10.0f,    1.0f    }, // seconds
+    { P_AMP_HOLD,      0.0f,    10.0f,    1.0f    }, // seconds
+    { P_AMP_DECAY,     0.0f,    10.0f,    1.0f    }, // seconds
+    { P_AMP_SUSTAIN,   0.0f,     1.0f,    1.0f    }, // 0-1 normalized level
+    { P_AMP_RELEASE,   0.0f,    10.0f,    1.0f    }, // seconds
 };
 
 // Clamp helper

@@ -101,6 +101,30 @@ void SynthDashboard::drawLeftColumn(int currentWave) {
     std::string attHint = "[" + attUp + "]/[" + attDown + "]";
     paramBox->draw("AMP ATTACK", attack, "sec", attHint);
 
+    auto hold = dspMatrix->tracks[0].params[P_AMP_HOLD].load();
+    std::string holdUp   = keyRouter->getKeyName(GrooveboxAction::HOLD_UP);
+    std::string holdDown = keyRouter->getKeyName(GrooveboxAction::HOLD_DOWN);
+    std::string holdHint = "[" + holdUp + "]/[" + holdDown + "]";
+    paramBox->draw("AMP HOLD", hold, "sec", holdHint);
+
+    auto decay = dspMatrix->tracks[0].params[P_AMP_DECAY].load();
+    std::string decUp   = keyRouter->getKeyName(GrooveboxAction::DECAY_UP);
+    std::string decDown = keyRouter->getKeyName(GrooveboxAction::DECAY_DOWN);
+    std::string decHint = "[" + decUp + "]/[" + decDown + "]";
+    paramBox->draw("AMP DECAY", decay, "sec", decHint);
+
+    auto sustain = dspMatrix->tracks[0].params[P_AMP_SUSTAIN].load();
+    std::string susUp   = keyRouter->getKeyName(GrooveboxAction::SUSTAIN_UP);
+    std::string susDown = keyRouter->getKeyName(GrooveboxAction::SUSTAIN_DOWN);
+    std::string susHint = "[" + susUp + "]/[" + susDown + "]";
+    paramBox->draw("AMP SUSTAIN", sustain * 100.0f, "%", susHint);
+
+    auto release = dspMatrix->tracks[0].params[P_AMP_RELEASE].load();
+    std::string relUp   = keyRouter->getKeyName(GrooveboxAction::RELEASE_UP);
+    std::string relDown = keyRouter->getKeyName(GrooveboxAction::RELEASE_DOWN);
+    std::string relHint = "[" + relUp + "]/[" + relDown + "]";
+    paramBox->draw("AMP RELEASE", release, "sec", relHint);
+
     // Latch toggle
     bool isLatched = dspMatrix->tracks[0].params[P_LATCH_MODE].load() > 0.5f;
     std::string latchKey = keyRouter->getKeyName(GrooveboxAction::TOGGLE_LATCH);

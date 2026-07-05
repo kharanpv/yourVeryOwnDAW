@@ -10,6 +10,14 @@ enum class GrooveboxAction {
     RES_DOWN,
     ATTACK_UP,
     ATTACK_DOWN,
+    HOLD_UP,
+    HOLD_DOWN,
+    DECAY_UP,
+    DECAY_DOWN,
+    SUSTAIN_UP,
+    SUSTAIN_DOWN,
+    RELEASE_UP,
+    RELEASE_DOWN,
 
     // --- State / Transport ---
     TOGGLE_LATCH,
