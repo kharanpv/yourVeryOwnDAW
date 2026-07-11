@@ -1,5 +1,6 @@
 #include "ScopeCanvas.h"
 #include "TerminalStyle.h"
+#include <cmath>
 
 void ScopeCanvas::begin(ImDrawList* drawList, ImVec2 pixelPos, ImVec2 pixelSize,
                         float dataMinX, float dataMaxX,
@@ -101,6 +102,8 @@ void ScopeCanvas::plotLine(const float* yValues, int count, ImU32 color, float t
     if (count < 2) return;
     float stepX = (dMaxX - dMinX) / (float)(count - 1);
     for (int i = 1; i < count; ++i) {
+        // Skip drawing if either endpoint is NaN (used for padding gaps)
+        if (std::isnan(yValues[i - 1]) || std::isnan(yValues[i])) continue;
         float x0 = dMinX + (float)(i - 1) * stepX;
         float x1 = dMinX + (float)i * stepX;
         ImVec2 p0 = dataToPixel(x0, yValues[i - 1]);

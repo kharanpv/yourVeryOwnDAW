@@ -20,7 +20,8 @@ public:
     void render(SharedMatrix& matrix, int waveType);
 
 private:
-    static constexpr int WAVEFORM_DISPLAY_SAMPLES = 2205; // 44100 / 20
+    static constexpr int WAVETABLE_SIZE  = 2205; // One full cycle at 2205 sampleRate
+    static constexpr int PAD_SAMPLES     = 100;   // Zero-padding on each side
 
     WaveformGenerator waveGen;
     ScopeCanvas canvas;

@@ -46,9 +46,12 @@ int WaveformGenerator::generate(float* outBuffer, int maxSamples,
         float raw = 0.0f;
         switch (waveType) {
             case 0: raw = std::sin(phase * 2.0f * M_PI); break;
-            case 1: raw = 2.0f * phase - 1.0f; break;
+            case 1: raw = 1.0f - 2.0f * phase; break;
             case 2: raw = (phase < 0.5f) ? 1.0f : -1.0f; break;
-            case 3: raw = 4.0f * std::abs(phase - 0.5f) - 1.0f; break;
+            case 3: {
+                float shifted = std::fmod(phase + 0.25f, 1.0f);
+                raw = 1.0f - 4.0f * std::abs(shifted - 0.5f);
+            } break;
             case 4: raw = ((float)((i * 12345 + 6789) % 1000) / 500.0f) - 1.0f; break;
             default: raw = 0.0f; break;
         }
