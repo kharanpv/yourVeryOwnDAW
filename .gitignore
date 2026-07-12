@@ -4,6 +4,7 @@
 
 # --- Zed Editor Specifics ---
 .zed/
+.rules
 
 # --- Language Server / Autocomplete ---
 .clangd

@@ -3,22 +3,25 @@
 #include <imgui.h>
 #include "../../core/SharedMatrix.h"
 #include "../elements/EnvelopeGenerator.h"
-#include "../elements/ScopeCanvas.h"
+#include "SignalPanel.h"
 
 // ────────────────────────────────────────────────────────────────────────────
 // EnvelopePanel
-// Owns its own EnvelopeGenerator + ScopeCanvas.
-// Reads AHDSR parameters from SharedMatrix and renders the amp envelope shape.
+// Renders the AHDSR envelope shape.
+// Inherits common canvas/background/border from SignalPanel.
 // ────────────────────────────────────────────────────────────────────────────
-class EnvelopePanel {
+class EnvelopePanel : public SignalPanel {
 public:
-    // Height includes the ScopeCanvas graph + its bottom margin for x-labels
-    float height() const { return 252.0f + 2.0f * 40.0f; }
+    EnvelopePanel() = default;
 
-    // Render the envelope shape panel.
-    void render(SharedMatrix& matrix);
+protected:
+    const char* label() const override { return "AMP ENVELOPE SHAPE"; }
+    float height() const override { return 330.0f; }  // 75% of waveform's 440
+    float belowGraphPadding() const override { return 40.0f; }  // x-axis labels below graph
+
+    void drawContent(ImDrawList* dl, ImVec2 canvasPos, ImVec2 canvasSize,
+                     SharedMatrix& matrix) override;
 
 private:
     EnvelopeGenerator envGen;
-    ScopeCanvas canvas;
 };

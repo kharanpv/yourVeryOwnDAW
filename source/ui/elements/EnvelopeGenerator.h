@@ -1,18 +1,41 @@
 #pragma once
 
+#include <imgui.h>
+
+// ────────────────────────────────────────────────────────────────────────────
+// EnvelopeNodes
+// The 6 anchor points of an AHDSR envelope in screen-space ImGui coordinates.
+// ────────────────────────────────────────────────────────────────────────────
+struct EnvelopeNodes {
+    ImVec2 P0;  // Start (bottom-left)
+    ImVec2 P1;  // Peak (top, amplitude 1.0)
+    ImVec2 P2;  // End hold (top, amplitude 1.0)
+    ImVec2 P3;  // Start sustain (drops to sustain level)
+    ImVec2 P4;  // End sustain (moved right by 20% of canvas width)
+    ImVec2 P5;  // End release (bottom-right corner)
+};
+
 // ────────────────────────────────────────────────────────────────────────────
 // EnvelopeGenerator
-// Pure math — no ImGui dependency. Generates an AHDSR envelope shape.
-// Output is an array of values in [0, 1] representing the envelope contour.
+// Computes the 6 anchor nodes (P0–P5) of an AHDSR envelope as screen-space
+// ImGui coordinates for direct polyline rendering.
+//
+// Layout rules (from the UI Rendering Blueprint):
+//   - Y-axis: fixed [0.0 → 1.0] mapped to canvas bottom → top.
+//   - X-axis: Sustain phase is hardcoded to 20% of canvas width.
+//              The remaining 80% is distributed proportionally among
+//              Attack + Hold + Decay + Release (actual time values).
 // ────────────────────────────────────────────────────────────────────────────
 class EnvelopeGenerator {
 public:
-    // Generate an AHDSR envelope into outBuffer.
-    // numSamples: how many points to generate (e.g., 100 for a plot).
-    // The envelope assumes a note-on at time 0 and a note-off after
-    // the sustain plateau (release is approximated via a fixed hold).
-    void generate(float* outBuffer, int numSamples,
-                  float attackSec, float holdSec,
-                  float decaySec, float sustainLevel,
-                  float releaseSec, float holdGraphicSec = 0.1f) const;
+    // Compute the 6 polyline nodes in pixel space.
+    //
+    //   canvasPos       – top-left screen position of the canvas region
+    //   canvasSize      – full width × height of the canvas region (pixels)
+    //   attack, hold, decay, release – time in seconds
+    //   sustainLevel    – amplitude 0.0 → 1.0
+    EnvelopeNodes compute(ImVec2 canvasPos, ImVec2 canvasSize,
+                          float attack,  float hold,
+                          float decay,   float sustainLevel,
+                          float release) const;
 };

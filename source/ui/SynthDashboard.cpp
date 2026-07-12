@@ -147,8 +147,8 @@ void SynthDashboard::drawRightColumn(int currentWave) {
     ImGui::Separator();
     ImGui::Spacing();
 
-    // Each panel is a fully self-contained rendering unit.
-    // Adding a third panel here is one line — no other code changes needed.
-    waveformPanel->render(*dspMatrix, currentWave);
+    // Each panel is a fully self-contained rendering unit via SignalPanel.
+    // currentWave is no longer passed — WaveformPanel reads it from the matrix.
+    waveformPanel->render(*dspMatrix);
     envelopePanel->render(*dspMatrix);
 }

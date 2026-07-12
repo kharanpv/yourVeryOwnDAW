@@ -6,7 +6,6 @@
 #include "../core/SharedMatrix.h"
 #include "../input/KeymapRouter.h"
 
-class ScopeCanvas;
 class ParamBox;
 class ToggleBox;
 class WaveformSelector;
@@ -33,7 +32,7 @@ private:
     std::unique_ptr<ToggleBox>        toggleBox;
     std::unique_ptr<WaveformSelector> waveformSelector;
 
-    // Encapsulated panels (each owns its generators + ScopeCanvas)
+    // Encapsulated panels (each owns its generator + canvas logic)
     std::unique_ptr<WaveformPanel>  waveformPanel;
     std::unique_ptr<EnvelopePanel>  envelopePanel;
 };

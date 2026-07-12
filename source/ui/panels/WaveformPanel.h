@@ -3,26 +3,28 @@
 #include <imgui.h>
 #include "../../core/SharedMatrix.h"
 #include "../elements/WaveformGenerator.h"
-#include "../elements/ScopeCanvas.h"
+#include "SignalPanel.h"
 
 // ────────────────────────────────────────────────────────────────────────────
 // WaveformPanel
-// Owns its own WaveformGenerator + ScopeCanvas.
-// Reads current DSP state from SharedMatrix and renders
-// a 50ms post-filter waveform preview.
+// Renders a single-cycle waveform preview.
+// Inherits common canvas/background/border from SignalPanel.
 // ────────────────────────────────────────────────────────────────────────────
-class WaveformPanel {
+class WaveformPanel : public SignalPanel {
 public:
-    // Height includes the ScopeCanvas graph + its bottom margin for x-labels
-    float height() const { return 360.0f + 2.0f * 40.0f; }
+    WaveformPanel() = default;
 
-    // Render the panel. waveType: 0–4 (SINE/SAW/SQUARE/TRIANGLE/NOISE).
-    void render(SharedMatrix& matrix, int waveType);
+protected:
+    const char* label() const override { return "WAVEFORM"; }
+    float height() const override { return 330.0f; }
+    float belowGraphPadding() const override { return 40.0f; }  // x-axis labels below graph
+
+    void drawContent(ImDrawList* dl, ImVec2 canvasPos, ImVec2 canvasSize,
+                     SharedMatrix& matrix) override;
 
 private:
-    static constexpr int WAVETABLE_SIZE  = 2205; // One full cycle at 2205 sampleRate
-    static constexpr int PAD_SAMPLES     = 100;   // Zero-padding on each side
+    static constexpr int WAVETABLE_SIZE  = 2205;
+    static constexpr int PAD_SAMPLES     = 100;
 
     WaveformGenerator waveGen;
-    ScopeCanvas canvas;
 };
