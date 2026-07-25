@@ -6,6 +6,7 @@
 #include "elements/TerminalStyle.h"
 #include "panels/WaveformPanel.h"
 #include "panels/EnvelopePanel.h"
+#include "panels/FilterSpectrumPanel.h"
 #include "../input/GrooveboxAction.h"
 
 #include <cmath>
@@ -17,7 +18,8 @@ SynthDashboard::SynthDashboard(std::shared_ptr<SharedMatrix> matrix,
       toggleBox(std::make_unique<ToggleBox>()),
       waveformSelector(std::make_unique<WaveformSelector>()),
       waveformPanel(std::make_unique<WaveformPanel>()),
-      envelopePanel(std::make_unique<EnvelopePanel>()) {
+      envelopePanel(std::make_unique<EnvelopePanel>()),
+      filterSpectrumPanel(std::make_unique<FilterSpectrumPanel>()) {
     setupTerminalTheme();
 }
 
@@ -151,4 +153,5 @@ void SynthDashboard::drawRightColumn(int currentWave) {
     // currentWave is no longer passed — WaveformPanel reads it from the matrix.
     waveformPanel->render(*dspMatrix);
     envelopePanel->render(*dspMatrix);
+    filterSpectrumPanel->render(*dspMatrix);
 }

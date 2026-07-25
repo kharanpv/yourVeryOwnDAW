@@ -37,8 +37,9 @@ protected:
                              SharedMatrix& matrix) = 0;
 
 private:
-    // Common constants (matching ScopeCanvas's labelMargin)
-    static constexpr float LABEL_MARGIN = 40.0f;
+    // Common constants — left margin reserved for Y-axis labels + ticks.
+    // Must be wide enough to fit the widest label across all panels.
+    static constexpr float LABEL_MARGIN = 80.0f;
 
     void drawBackground(ImDrawList* dl, ImVec2 canvasPos, ImVec2 canvasSize);
     void drawBorder(ImDrawList* dl, ImVec2 canvasPos, ImVec2 canvasSize);

@@ -11,6 +11,7 @@ class ToggleBox;
 class WaveformSelector;
 class WaveformPanel;
 class EnvelopePanel;
+class FilterSpectrumPanel;
 
 class SynthDashboard {
 public:
@@ -33,6 +34,7 @@ private:
     std::unique_ptr<WaveformSelector> waveformSelector;
 
     // Encapsulated panels (each owns its generator + canvas logic)
-    std::unique_ptr<WaveformPanel>  waveformPanel;
-    std::unique_ptr<EnvelopePanel>  envelopePanel;
+    std::unique_ptr<WaveformPanel>       waveformPanel;
+    std::unique_ptr<EnvelopePanel>       envelopePanel;
+    std::unique_ptr<FilterSpectrumPanel> filterSpectrumPanel;
 };

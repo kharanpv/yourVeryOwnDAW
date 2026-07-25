@@ -19,6 +19,7 @@ inline ImU32 colDimText()   { return IM_COL32(100, 100, 100, 255); } // #646464
 inline ImU32 colHintText()  { return IM_COL32(89,  89,  89,  255); } // #595959
 inline ImU32 colAmber()   { return IM_COL32(255, 178, 0,   255); } // #FFB200
 inline ImU32 colActiveBg()  { return IM_COL32(51,  51,  51,  255); } // #333333
+inline ImU32 colNavyBlue() { return IM_COL32(65,  105, 225, 255); } // #4169E1 Royal blue
 
 // ── Colors (ImVec4 for ImGui text/colored items) ──
 inline ImVec4 textWhite()   { return ImVec4(0.90f, 0.90f, 0.90f, 1.00f); }
